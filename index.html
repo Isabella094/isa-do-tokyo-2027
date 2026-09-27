@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#D6A13A">
+<title>✧ ISA &amp; Do TOKYO Trip ✧</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
+:root{
+  --bg:#FFF7EC; --paper:#FFFDF9; --paper2:#F8EEE5; --ink:#352B2D; --muted:#847577;
+  --line:#E9D9CE; --burgundy:#7A263A; --burgundy-soft:#F4E2E5; --yellow:#D9A62E;
+  --yellow-soft:#F9EDC6; --orange:#D66D3D; --orange-soft:#F7E0D2; --sage:#6F8A6D;
+  --sage-soft:#E7EFE4; --blue:#627E93; --blue-soft:#E5EDF1; --rose:#B85C68;
+  --danger:#B84A4A; --shadow:0 9px 26px rgba(91,57,42,.075);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth;background:#E9E0D7}
+body{margin:0;color:var(--ink);font-family:'Noto Sans TC',system-ui,-apple-system,sans-serif;background:#E9E0D7}
+button,input,select,textarea{font:inherit;color:inherit}
+button,a{touch-action:manipulation}
+button{cursor:pointer}
+.app{width:100%;max-width:430px;min-height:100dvh;margin:0 auto;background:var(--bg);position:relative;box-shadow:0 0 40px rgba(69,43,37,.11);padding-bottom:calc(36px + env(safe-area-inset-bottom))}
+.header{position:sticky;top:0;z-index:80;background:#D9A441;padding:calc(11px + env(safe-area-inset-top)) 18px 9px;border-bottom:1px solid rgba(122,38,58,.14);box-shadow:0 4px 18px rgba(100,55,31,.10)}
+.home-title{display:block;text-align:center;text-decoration:none;color:#70233A;font-family:'Baloo 2','Noto Sans TC',sans-serif;font-weight:700;font-size:20px;letter-spacing:.45px;line-height:1.15}
+.brand-line{width:58px;height:2px;border-radius:99px;margin:6px auto 0;background:#7A263A;opacity:.78}
+.view{display:none}.view.active{display:block}
+.content{padding:18px 15px 8px}.section{margin:0 0 26px}.section-title{font-family:'Baloo 2','Noto Sans TC';font-size:16px;letter-spacing:.2px;margin:0 0 10px;color:var(--ink)}
+.section-title .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--yellow);margin:0 7px 2px 0;box-shadow:0 0 0 3px rgba(217,166,46,.12)}.section-title .dot.orange{background:var(--orange);box-shadow:0 0 0 3px rgba(214,109,61,.11)}.section-title .dot.red{background:var(--burgundy);box-shadow:0 0 0 3px rgba(122,38,58,.10)}
+.card{background:var(--paper);border:1px solid #EBD9CC;border-radius:20px;box-shadow:var(--shadow)}
+/* FX */
+.fx{display:grid;grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr);gap:7px;align-items:center}.fxbox{background:var(--paper);border:1px solid var(--line);border-radius:17px;padding:10px 11px;box-shadow:var(--shadow)}.fxlabel{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.3px}.fx input{width:100%;min-width:0;border:0;outline:0;background:transparent;font-size:19px;font-weight:700;padding:4px 0 0}.swap{width:34px;height:34px;border:1px solid #E1C58E;border-radius:50%;background:var(--yellow-soft);font-size:16px;color:var(--burgundy);box-shadow:0 3px 10px rgba(118,78,35,.08)}
+/* Paid */
+.paid{padding:11px}.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.tab{border:1px solid var(--line);border-radius:12px;padding:9px 2px;background:var(--paper);font-size:13px;font-weight:700}.tab.active{font-weight:800}.tab[data-tab="food"].active{border-color:#E7B59B;background:var(--orange-soft);color:#A64C2D}.tab[data-tab="shopping"].active{border-color:#E4C76F;background:var(--yellow-soft);color:#7A5A18}.tab[data-tab="ticket"].active{border-color:#B8C9B5;background:var(--sage-soft);color:#506A4F}.tab[data-tab="other"].active{border-color:#B7C7D2;background:var(--blue-soft);color:#49677D}#panel:not(:empty){margin-top:11px;padding-top:11px;border-top:1px solid var(--line)}.entry-form{display:grid;gap:9px;background:var(--paper2);border-radius:16px;padding:11px}.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.field label,.tiny-label{display:block;font-size:10px;color:var(--muted);margin:0 0 4px;font-weight:600}.field input,.field select,.field textarea,.fixed-grid input,.fixed-grid select{width:100%;min-width:0;border:1px solid var(--line);border-radius:11px;background:white;padding:8px 8px;outline:none;font-size:15px}.field textarea{resize:vertical;min-height:70px}.money{display:grid;grid-template-columns:1.35fr .85fr;gap:6px}.primary{border:0;border-radius:12px;background:var(--burgundy);color:white;padding:9px 12px;font-weight:700;font-size:13px}.secondary{border:1px solid var(--line);border-radius:12px;background:white;padding:9px 12px;font-weight:700}.soft-btn{border:1px solid #E2C879;border-radius:11px;background:var(--yellow-soft);padding:8px 10px;font-weight:700;color:#6F4F1D}.list{display:grid;gap:8px;margin-top:9px}.swipe-shell{position:relative;overflow:hidden;border-radius:15px;background:var(--danger);touch-action:pan-y}.delete-action{position:absolute;left:0;top:0;bottom:0;width:76px;border:0;background:var(--danger);color:white;font-size:18px;display:flex;align-items:center;justify-content:center}.expense-row{position:relative;z-index:2;background:white;border:1px solid var(--line);border-radius:15px;padding:10px 11px;transition:transform .18s ease}.expense-top{display:flex;gap:8px;justify-content:space-between;align-items:flex-start}.expense-name{font-weight:700;font-size:14px}.expense-meta{font-size:10.5px;color:var(--muted);margin-top:3px}.expense-amount{font-weight:700;white-space:nowrap;font-size:13px}.empty{text-align:center;color:var(--muted);font-size:12px;padding:15px 5px}.hint{font-size:10.5px;color:var(--muted);margin-top:8px;line-height:1.55}.fixed-list{display:grid;gap:9px}.fixed-item{background:var(--paper2);border-radius:15px;padding:10px}.fixed-title{font-weight:700;font-size:13px;margin-bottom:7px}.fixed-grid{display:grid;grid-template-columns:1.05fr .75fr 1fr;gap:6px}.fixed-label{font-size:10.5px;color:var(--muted);margin:7px 0 4px}.transport-add{display:grid;gap:7px}.transport-row{background:white;border:1px solid var(--line);border-radius:13px;padding:9px}.other-actions{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}.other-actions button{border:1px solid var(--line);border-radius:10px;background:white;padding:7px 9px;font-size:12px;font-weight:700}
+/* Schedule home */
+.dates{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.date{display:block;text-decoration:none;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:17px;padding:11px 5px 10px;text-align:center;box-shadow:var(--shadow);position:relative;overflow:hidden}.date:before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:var(--yellow)}.date:nth-child(2):before{background:var(--orange)}.date:nth-child(3):before{background:var(--burgundy)}.date:nth-child(4):before{background:var(--sage)}.date:nth-child(5):before{background:var(--blue)}.date:nth-child(6):before{background:var(--rose)}.date b{display:block;font-family:'Baloo 2';font-size:18px;color:var(--burgundy);line-height:1.15}.date:nth-child(2) b{color:#A65332}.date:nth-child(4) b{color:#567254}.date:nth-child(5) b{color:#506D82}.date:nth-child(6) b{color:#9B4957}.date span{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.7px}.date small{display:block;font-size:9px;color:#A59A92;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 3px}
+/* Important */
+.important{padding:9px 12px}.important-row{position:relative;z-index:2;background:var(--paper);padding:10px 2px;border-bottom:1px solid #F0EBE6;display:flex;align-items:center;gap:10px}.important-row.done .important-text{text-decoration:line-through;color:var(--muted)}.circle{width:19px;height:19px;border:1.5px solid #B7ADA5;border-radius:50%;flex:none;background:white;padding:0}.circle.done{background:var(--sage);border-color:var(--sage);position:relative}.circle.done:after{content:'✓';position:absolute;inset:-2px 0 0;text-align:center;font-size:13px;font-weight:800;color:white}.important-text{flex:1;font-size:13px}.important-add{display:grid;grid-template-columns:1fr auto;gap:7px;margin-top:9px}.important-add input{min-width:0;border:1px solid var(--line);border-radius:11px;background:var(--paper2);padding:8px 10px;font-size:15px}.important-add button{border:0;border-radius:11px;background:var(--burgundy);color:#fff;padding:8px 11px;font-weight:700;font-size:12px}
+/* Day */
+.day-wrap{padding:18px 17px 80px}.day-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.back{display:inline-flex;align-items:center;gap:5px;color:var(--muted);text-decoration:none;font-size:12px;font-weight:700}.edit-toggle{border:1px solid var(--line);border-radius:999px;background:white;padding:7px 11px;font-size:12px;font-weight:700;color:var(--burgundy)}.day-kicker{font-family:'Baloo 2';font-weight:700;color:var(--orange);font-size:13px;letter-spacing:1.2px}.day-title{font-family:'Baloo 2','Noto Sans TC';font-size:26px;line-height:1.05;margin:3px 0 4px;color:var(--burgundy)}.day-subtitle{font-size:12px;color:var(--muted);margin-bottom:21px}.day-subtitle button{border:0;background:none;padding:0 0 0 5px;color:var(--burgundy);font-weight:700}.timeline{position:relative}.timeline-item{display:grid;grid-template-columns:55px 16px minmax(0,1fr);column-gap:7px;position:relative;min-height:83px}.timeline-time{font-family:'Baloo 2';font-size:14px;font-weight:700;padding-top:1px;color:var(--ink)}.timeline-axis{position:relative;display:flex;justify-content:center}.timeline-axis:after{content:'';position:absolute;top:14px;bottom:-1px;width:1px;background:#DDD3CB}.timeline-item:last-child .timeline-axis:after{display:none}.timeline-dot{position:relative;z-index:2;width:9px;height:9px;margin-top:6px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 4px var(--bg)}.timeline-item:nth-child(6n+2) .timeline-dot{background:var(--orange)}.timeline-item:nth-child(6n+3) .timeline-dot{background:var(--burgundy)}.timeline-item:nth-child(6n+4) .timeline-dot{background:var(--sage)}.timeline-item:nth-child(6n+5) .timeline-dot{background:var(--blue)}.timeline-item:nth-child(6n) .timeline-dot{background:var(--rose)}.timeline-body{padding:0 0 18px}.timeline-title{font-weight:700;font-size:15px;line-height:1.45}.timeline-title a{color:var(--ink);text-decoration:none;border-bottom:1.5px solid #D5A343}.timeline-title a:after{content:' ↗';font-size:11px;color:var(--orange)}.timeline-desc{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:3px;white-space:pre-line}.transport{font-size:10.5px;color:#9B7550;margin-top:8px;font-weight:600}.edit-tools{display:flex;gap:5px;margin-top:8px}.edit-tools button{border:1px solid var(--line);background:white;border-radius:9px;padding:5px 8px;font-size:11px}.add-itinerary{width:100%;border:1px dashed #D8C9BE;background:#FFFCF8;border-radius:15px;padding:11px;color:var(--burgundy);font-weight:700;margin:4px 0 22px}.route-card{padding:14px 14px 13px;margin-top:6px}.route-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.route-head b{font-family:'Baloo 2';font-size:15px}.route-head button{border:0;background:none;color:var(--burgundy);font-size:12px;font-weight:700}.route-line{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700}.route-arrow{color:var(--orange)}.route-meta{font-size:11px;color:var(--muted);line-height:1.65;margin-top:7px;white-space:pre-line}.route-link{display:inline-block;margin-top:8px;color:var(--burgundy);font-size:11px;font-weight:700;text-decoration:none}.route-link:after{content:' ↗'}.route-section{margin-top:6px}.route-section-head{display:flex;align-items:center;justify-content:space-between;margin:0 2px 9px}.route-section-head b{font-family:'Baloo 2';font-size:15px}.route-add{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 10px;color:var(--burgundy);font-size:11px;font-weight:700}.route-card+.route-card{margin-top:9px}.route-number{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.8px;margin-bottom:5px}.day-empty{padding:24px 14px;text-align:center;border:1px dashed #D8CFC8;border-radius:18px;color:var(--muted);font-size:12px;margin-bottom:12px}
+/* Bottom sheet */
+.sheet-backdrop{position:fixed;z-index:150;inset:0;background:rgba(35,28,25,.28);display:none;align-items:flex-end;justify-content:center}.sheet-backdrop.open{display:flex}.sheet{width:100%;max-width:430px;max-height:88dvh;overflow:auto;background:var(--bg);border-radius:24px 24px 0 0;padding:12px 17px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(50,37,31,.15)}.grab{width:42px;height:4px;border-radius:99px;background:#D8D0C9;margin:0 auto 15px}.sheet h3{font-family:'Baloo 2','Noto Sans TC';margin:0 0 13px;font-size:20px;color:var(--burgundy)}.sheet-form{display:grid;gap:10px}.sheet-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:8px;margin-top:3px}.danger-text{border:0;background:transparent;color:var(--danger);font-weight:700;padding:9px}.close-x{float:right;border:0;background:none;font-size:20px;color:var(--muted);padding:0 2px}
+.footer{text-align:center;color:#A79C94;font-family:'Baloo 2';font-size:11px;padding:4px 0 14px}
+@media(max-width:350px){.content,.day-wrap{padding-left:13px;padding-right:13px}.home-title{font-size:21px}.tab{font-size:12px}.fixed-grid{grid-template-columns:1fr}.field-row{grid-template-columns:1fr}.day-title{font-size:27px}}
+@media(min-width:431px){body{padding:18px 0}.app{min-height:calc(100dvh - 36px);border-radius:26px;overflow:clip}.header{border-radius:26px 26px 0 0}.sheet{border-radius:24px}}
+
+/* Colorful-chic accents: lively without neon */
+#paidSection.card{border-top:3px solid var(--orange)}
+.dates .date{transition:transform .16s ease,box-shadow .16s ease}
+.dates .date:active{transform:scale(.97)}
+.fxbox:first-child{border-top:3px solid var(--yellow)}
+.fxbox:last-child{border-top:3px solid var(--burgundy)}
+.fixed-item:nth-child(2){background:#FBF1E8}
+.fixed-item:nth-child(3){background:#EEF3F5}
+.fixed-item:nth-child(4){background:#F3EEE9}
+.fixed-item:nth-child(5){background:#EEF3EC}
+
+
+/* v3 — Tokyo retro-modern: colorful, polished, mobile-first */
+:root{
+  --bg:#F8F0E7;
+  --paper:#FFFCF8;
+  --paper2:#F4E8DD;
+  --ink:#342A2D;
+  --muted:#7F7071;
+  --line:#E5D2C5;
+  --burgundy:#76283D;
+  --yellow:#D8A12F;
+  --orange:#CF7443;
+  --sage:#71866B;
+  --blue:#607D92;
+  --rose:#A95061;
+  --shadow:0 7px 22px rgba(91,57,42,.07);
+}
+html,body{background:#E9E1D9}
+.app{background:var(--bg)}
+/* One solid header color — no gradient */
+.header{
+  background:#D6A13A;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 8px;
+  border-bottom:0;
+  box-shadow:0 5px 16px rgba(104,63,33,.11);
+}
+.home-title{
+  color:#74263C;
+  font-size:16.5px;
+  letter-spacing:.35px;
+  line-height:1.15;
+}
+.brand-line{width:42px;height:2px;margin-top:5px;background:#74263C;opacity:.72}
+.content{padding:16px 14px 8px}
+.section{margin-bottom:22px}
+.section-title{font-size:14px;margin-bottom:8px;letter-spacing:.45px;font-weight:700}
+.section-title .dot{width:7px;height:7px;margin-right:6px}
+.card{border-radius:18px;box-shadow:var(--shadow);border-color:#E6D3C5}
+/* Compact forms for iPhone */
+.paid{padding:10px}
+.tabs{gap:6px}
+.tab{font-size:12px;padding:8px 2px;border-radius:11px}
+.entry-form{gap:8px;padding:10px;border-radius:15px}
+.field label,.tiny-label{font-size:9.5px;margin-bottom:3px}
+.field input,.field select,.field textarea,.fixed-grid input,.fixed-grid select{
+  font-size:13px;padding:7px 8px;border-radius:10px;
+}
+.field textarea{min-height:62px}
+.primary,.secondary{font-size:12px;padding:8px 10px}
+.fxbox{padding:9px 10px;border-radius:15px}
+.fxlabel{font-size:10px}.fx input{font-size:17px}.swap{width:32px;height:32px;font-size:14px}
+.important{padding:8px 10px}
+.important-row{padding:9px 2px}.important-text{font-size:12.5px}
+.important-add input{font-size:13px;padding:8px 9px}.important-add button{font-size:11.5px;padding:8px 10px}
+.hint{font-size:10px}
+/* Distinctive editorial accents without making the page loud */
+.fxbox:first-child{border-top:3px solid #D8A12F}
+.fxbox:last-child{border-top:3px solid #76283D}
+.paid.card{border-left:3px solid #CF7443}
+.important.card{border-left:3px solid #71866B}
+.date{border-radius:15px;padding-top:12px;box-shadow:0 5px 16px rgba(91,57,42,.06)}
+.date b{font-size:17px}.date span{font-size:9.5px}.date small{font-size:8.5px}
+.date:nth-child(1){background:#FFF9E9}.date:nth-child(2){background:#FFF3EA}.date:nth-child(3){background:#FAECEF}
+.date:nth-child(4){background:#EFF4EC}.date:nth-child(5){background:#EDF3F6}.date:nth-child(6){background:#F7ECEF}
+.fixed-title{font-size:12.5px}.fixed-label{font-size:10px}
+.expense-name{font-size:13px}.expense-meta{font-size:10px}.expense-amount{font-size:12px}
+/* Swipe rows work with touch and mouse-drag */
+.swipe-shell{touch-action:pan-y;overscroll-behavior-x:contain}
+.swipe-shell .expense-row,.swipe-shell .important-row{user-select:none;-webkit-user-select:none;cursor:grab}
+.swipe-shell .expense-row:active,.swipe-shell .important-row:active{cursor:grabbing}
+.delete-action{width:72px;font-size:16px}
+/* Day pages stay compact too */
+.day-wrap{padding:16px 15px 76px}.day-kicker{font-size:12px}.day-title{font-size:23px}
+.timeline-time{font-size:13px}.timeline-title{font-size:14px}.timeline-desc{font-size:11px}
+.edit-toggle,.back{font-size:11px}.route-head b{font-size:14px}.route-line{font-size:12.5px}
+.sheet h3{font-size:18px}
+@media(max-width:350px){.home-title{font-size:15px}.content,.day-wrap{padding-left:12px;padding-right:12px}}
+
+/* Reliable delete confirmation */
+.delete-confirm{position:fixed;z-index:300;inset:0;background:rgba(35,28,25,.34);display:none;align-items:center;justify-content:center;padding:22px}
+.delete-confirm.open{display:flex}
+.delete-box{width:min(340px,100%);background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 18px 55px rgba(50,37,31,.20)}
+.delete-box h3{margin:0 0 7px;color:var(--burgundy);font-size:17px}
+.delete-box p{margin:0 0 15px;color:var(--muted);font-size:12.5px;line-height:1.55}
+.delete-confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.delete-confirm-actions button{border-radius:12px;padding:10px 12px;font-size:13px;font-weight:750}
+.delete-cancel{border:1px solid var(--line);background:#fff;color:var(--text)}
+.delete-ok{border:0;background:var(--danger);color:#fff}
+.delete-action{pointer-events:auto}
+
+</style>
+</head>
+<body>
+<main class="app">
+<header class="header"><a class="home-title" href="#home">✧ Isa &amp; Do TOKYO Trip ✧</a><div class="brand-line"></div></header>
+
+<section id="homeView" class="view active">
+  <div class="content">
+    <section class="section">
+      <h2 class="section-title"><span class="dot"></span>EXCHANGE</h2>
+      <div class="fx"><div class="fxbox"><div class="fxlabel">🇯🇵 JPY</div><input id="jpy" inputmode="decimal" placeholder="¥ 10,000"></div><button class="swap" id="swap" aria-label="切換">⇄</button><div class="fxbox"><div class="fxlabel">🇹🇼 TWD</div><input id="twd" inputmode="decimal" placeholder="$ 2,xxx"></div></div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title"><span class="dot red"></span>PAID</h2>
+      <div class="paid card">
+        <div class="tabs"><button class="tab" data-tab="food">吃飯</button><button class="tab" data-tab="shopping">購物</button><button class="tab" data-tab="ticket">票券</button><button class="tab" data-tab="other">其他</button></div>
+        <div id="panel"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title"><span class="dot orange"></span>Schedule</h2>
+      <div class="dates" id="dateLinks"></div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title"><span class="dot"></span>Important</h2>
+      <div class="important card">
+        <div id="importantList"></div>
+        <div id="importantForm" class="important-add"><input id="importantInput" placeholder="新增重要事項"><button id="importantAddBtn" type="button">＋ 新增</button></div>
+        <div class="hint">點圓圈完成；點文字修改；往右滑刪除。</div>
+      </div>
+    </section>
+  </div>
+  <div class="footer">Isa &amp; Do JAN 2027 IN TOKYO</div>
+</section>
+
+<section id="dayView" class="view">
+  <div class="day-wrap">
+    <div class="day-top"><a class="back" href="#home">‹ HOME</a><button class="edit-toggle" id="editToggle">✎ 編輯</button></div>
+    <div class="day-kicker" id="dayKicker"></div>
+    <h1 class="day-title" id="dayTitle"></h1>
+    <div class="day-subtitle"><span id="daySubtitle"></span><button id="editDayMeta" hidden>✎</button></div>
+    <div id="timeline"></div>
+    <button class="add-itinerary" id="addItinerary" hidden>＋ 新增行程</button>
+    <div id="routeArea"></div>
+  </div>
+</section>
+</main>
+
+<div class="sheet-backdrop" id="itemSheet">
+  <div class="sheet">
+    <button class="close-x" type="button" data-close-sheet>×</button><div class="grab"></div>
+    <h3 id="itemSheetTitle">新增行程</h3>
+    <form id="itemForm" class="sheet-form">
+      <input type="hidden" name="index" value="">
+      <div class="field-row">
+        <div class="field"><label>時間</label><input name="time" type="time"></div>
+        <div class="field"><label>交通時間（分鐘）</label><input name="transportMinutes" inputmode="numeric" placeholder="例如 20"></div>
+      </div>
+      <div class="field"><label>名稱</label><input name="title" required placeholder="例如 隅田公園"></div>
+      <div class="field"><label>說明</label><textarea name="description" placeholder="備註、集合方式、營業時間…"></textarea></div>
+      <div class="field"><label>超連結</label><input name="url" type="url" placeholder="Google Maps、飯店、票券等網址"></div>
+      <div class="field"><label>交通方式</label><input name="transport" placeholder="例如 🚃 京急機場線 / 🚶 步行"></div>
+      <div class="sheet-actions"><button type="button" class="secondary" data-close-sheet>取消</button><button class="primary" type="submit">儲存</button></div>
+      <button type="button" class="danger-text" id="deleteItem" hidden>刪除這個行程</button>
+    </form>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="metaSheet">
+  <div class="sheet">
+    <button class="close-x" type="button" data-close-sheet>×</button><div class="grab"></div>
+    <h3>編輯當天標題</h3>
+    <form id="metaForm" class="sheet-form">
+      <div class="field"><label>主標題</label><input name="title" placeholder="例如 浅草"></div>
+      <div class="field"><label>副標題</label><input name="subtitle" placeholder="例如 ASAKUSA"></div>
+      <div class="sheet-actions"><button type="button" class="secondary" data-close-sheet>取消</button><button class="primary" type="submit">儲存</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="routeSheet">
+  <div class="sheet">
+    <button class="close-x" type="button" data-close-sheet>×</button><div class="grab"></div>
+    <h3 id="routeSheetTitle">新增 Route</h3>
+    <form id="routeForm" class="sheet-form">
+      <input type="hidden" name="index" value="">
+      <div class="field-row"><div class="field"><label>起點</label><input name="from"></div><div class="field"><label>終點</label><input name="to"></div></div>
+      <div class="field"><label>路線</label><input name="line" placeholder="例如 京急機場線・快特"></div>
+      <div class="field-row"><div class="field"><label>時間</label><input name="duration" placeholder="38 min"></div><div class="field"><label>價格</label><input name="fare" placeholder="¥599"></div></div>
+      <div class="field"><label>備註</label><textarea name="note" placeholder="方向、出口、是否需換車…"></textarea></div>
+      <div class="field"><label>超連結</label><input name="url" type="url" placeholder="Google Maps / 路線網址"></div>
+      <div class="sheet-actions"><button type="button" class="secondary" data-close-sheet>取消</button><button class="primary" type="submit">儲存</button></div>
+      <button type="button" class="danger-text" id="deleteRoute" hidden>刪除這個 Route</button>
+    </form>
+  </div>
+</div>
+
+<div class="delete-confirm" id="deleteConfirm" aria-hidden="true">
+  <div class="delete-box" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
+    <h3 id="deleteConfirmTitle">確定要刪除嗎？</h3>
+    <p id="deleteConfirmText">刪除後這筆資料會移除。</p>
+    <div class="delete-confirm-actions">
+      <button type="button" class="delete-cancel" id="deleteCancel">取消</button>
+      <button type="button" class="delete-ok" id="deleteOK">刪除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const dates=['1/16','1/17','1/18','1/19','1/20','1/21'];
+const currencies=['JPY','TWD','USD'];
+const payers=['無','Do','Isa','Do先付','Isa先付','完'];
+const KEY='isa-do-tokyo-v3';
+const dayInfo={
+  day0116:{date:'01.16',weekday:'SATURDAY',short:'SAT',title:'浅草',subtitle:'ASAKUSA'},
+  day0117:{date:'01.17',weekday:'SUNDAY',short:'SUN',title:'東京西側',subtitle:'MEIJI · HARAJUKU · SHIBUYA · SHINJUKU'},
+  day0118:{date:'01.18',weekday:'MONDAY',short:'MON',title:'東京中央',subtitle:'IMPERIAL PALACE · GINZA · TOKYO TOWER'},
+  day0119:{date:'01.19',weekday:'TUESDAY',short:'TUE',title:'Disneyland',subtitle:'TOKYO DISNEYLAND'},
+  day0120:{date:'01.20',weekday:'WEDNESDAY',short:'WED',title:'Shopping Day',subtitle:'TOKYO'},
+  day0121:{date:'01.21',weekday:'THURSDAY',short:'THU',title:'回程',subtitle:'TOKYO → TAIPEI'}
+};
+const defaultSchedule={
+  day0116:{
+    title:'浅草',subtitle:'ASAKUSA',
+    items:[
+      {time:'05:50',title:'出發',description:'前一週先預約 Uber',url:'',transport:'🚕 Uber',transportMinutes:'20'},
+      {time:'06:10',title:'松山機場 T1',description:'國際線\n提前三小時抵達',url:'https://www.google.com/maps/search/?api=1&query=Taipei+Songshan+Airport',transport:'✈️ JAL',transportMinutes:'170'},
+      {time:'09:10',title:'松山機場 T1',description:'TSA → HND · 2 hr 50 min',url:'https://www.google.com/maps/search/?api=1&query=Taipei+Songshan+Airport',transport:'✈️ 飛往東京',transportMinutes:'170'},
+      {time:'13:00',title:'羽田機場 T3',description:'抵達東京',url:'https://www.google.com/maps/search/?api=1&query=Haneda+Airport+Terminal+3',transport:'🚃 京急機場線',transportMinutes:'38'},
+      {time:'15:00',title:'里士滿酒店淺草',description:'14:00 起可 Check-in\n先休息、放行李',url:'https://www.google.com/maps/search/?api=1&query=Richmond+Hotel+Asakusa+Tokyo',transport:'🚶 步行',transportMinutes:'10'},
+      {time:'15:40',title:'隅田公園（淺草側）',description:'散步、拍晴空塔',url:'https://www.google.com/maps/search/?api=1&query=Sumida+Park+Asakusa+Tokyo',transport:'',transportMinutes:''}
+    ],
+    routes:[{from:'羽田 T3',to:'淺草',line:'京急機場線 → 都營淺草線・直通',duration:'38 min',fare:'IC ¥599',note:'不用換車 · 往京成高砂方向\n淺草 A2b 出口有電梯',url:'https://www.google.com/maps/dir/Haneda+Airport+Terminal+3/Asakusa,+Tokyo/'}]
+  },
+  day0117:{title:'東京西側',subtitle:'MEIJI · HARAJUKU · SHIBUYA · SHINJUKU',items:[],routes:[]},
+  day0118:{title:'東京中央',subtitle:'IMPERIAL PALACE · GINZA · TOKYO TOWER',items:[],routes:[]},
+  day0119:{title:'Disneyland',subtitle:'TOKYO DISNEYLAND',items:[],routes:[]},
+  day0120:{title:'Shopping Day',subtitle:'TOKYO',items:[],routes:[]},
+  day0121:{title:'回程',subtitle:'TOKYO → TAIPEI',items:[],routes:[]}
+};
+const defaults={
+  food:[],shopping:[],ticket:[],
+  other:{flight:{amount:'42328',currency:'TWD',payer:'完'},taxis:[],metros:[],hotels:[{label:'1/16–1/17 🏮',amount:'135.22',currency:'USD',payer:'無'},{label:'1/17–1/21 🗼',amount:'67462',currency:'JPY',payer:'無'}],insurance:[{label:'Do',amount:'',currency:'TWD',payer:'無'},{label:'Isa',amount:'',currency:'TWD',payer:'無'}]},
+  important:[
+    {text:'出發前三天填 Visit Japan Web',done:false},{text:'出發前 24 小時線上報到',done:false},{text:'設定西瓜卡',done:false},{text:'換足夠日圓',done:false},{text:'買旅平險',done:false},{text:'買網路 / eSIM',done:false},{text:'回程前 24 小時線上報到',done:false}
+  ],
+  schedule:defaultSchedule
+};
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function safeUrl(url=''){try{const u=new URL(url);return ['http:','https:'].includes(u.protocol)?u.href:''}catch{return ''}}
+function mergeSchedule(saved={}){const out=clone(defaultSchedule);for(const key of Object.keys(out)){if(!saved[key])continue;const prior=saved[key];let routes;if(Array.isArray(prior.routes))routes=prior.routes;else if(prior.route&&Object.values(prior.route).some(Boolean))routes=[prior.route];else routes=out[key].routes||[];out[key]={...out[key],...prior,items:Array.isArray(prior.items)?prior.items:out[key].items,routes};delete out[key].route}return out}
+let db=clone(defaults);
+try{const old=JSON.parse(localStorage.getItem(KEY)||'null');if(old){db={...db,...old,other:{...db.other,...(old.other||{})},schedule:mergeSchedule(old.schedule||{})}}}catch(e){}
+function saveDB(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify(db));
+    return true;
+  }catch(e){
+    console.warn('Storage unavailable; keeping changes for this open page.',e);
+    return false;
+  }
+}
+function opts(arr,selected){return arr.map(x=>`<option ${x===selected?'selected':''}>${x}</option>`).join('')}
+
+/* Router */
+let currentDay=null, editMode=false;
+function route(){const hash=(location.hash||'#home').replace('#','');const isDay=Object.prototype.hasOwnProperty.call(dayInfo,hash);document.getElementById('homeView').classList.toggle('active',!isDay);document.getElementById('dayView').classList.toggle('active',isDay);if(isDay){currentDay=hash;editMode=false;renderDay();window.scrollTo(0,0)}else{currentDay=null;editMode=false;renderDateLinks();window.scrollTo(0,0)}}
+window.addEventListener('hashchange',route);
+document.querySelector('.home-title').addEventListener('click',()=>{location.hash='home'});
+function renderDateLinks(){const box=document.getElementById('dateLinks');box.innerHTML=Object.entries(dayInfo).map(([key,info])=>{const d=db.schedule[key]||info;return `<a class="date" href="#${key}"><b>${info.date.replace('0','').replace('.', '/')}</b><span>${info.short}</span><small>${esc(d.title||info.title)}</small></a>`}).join('')}
+
+/* PAID */
+let active=null;const panel=document.getElementById('panel');
+function renderPaid(){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===active));
+  if(!active){panel.innerHTML='';return}
+  if(active==='other'){renderOther();return}
+  const isTicket=active==='ticket';const label=active==='food'?'餐廳名稱':active==='shopping'?'店家':'票券／店家';
+  panel.innerHTML=`<form class="entry-form" id="entryForm">${isTicket?'':`<div class="field"><label>日期</label><select name="date">${opts(dates,'1/16')}</select></div>`}<div class="field"><label>${label}</label><input name="name" placeholder="輸入${label}" required></div><div class="field-row"><div class="field"><label>金額＋幣別</label><div class="money"><input name="amount" inputmode="decimal" placeholder="金額" required><select name="currency">${opts(currencies,'JPY')}</select></div></div><div class="field"><label>付款人</label><select name="payer">${opts(payers,'無')}</select></div></div><button class="primary">＋ 儲存這一筆</button></form><div class="list" id="expenseList"></div><div class="hint">點一下可修改；手機往右滑會露出刪除鍵。</div>`;
+  document.getElementById('entryForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);db[active].push({date:f.get('date')||'',name:f.get('name'),amount:f.get('amount'),currency:f.get('currency'),payer:f.get('payer')});saveDB();renderPaid()};renderExpenseList();
+}
+function swipeHTML(i,inner,kind='expense'){return `<div class="swipe-shell" data-i="${i}" data-kind="${kind}"><button class="delete-action" type="button">🗑</button><div class="expense-row">${inner}</div></div>`}
+function setupSwipe(shell,row,onDelete,onClick){
+  const reveal=72;
+  let startX=0,dx=0,base=0,moved=false,dragging=false,open=false;
+  const setX=x=>{dx=Math.max(0,Math.min(reveal,x));row.style.transform=`translateX(${dx}px)`};
+  const finish=()=>{
+    if(!dragging)return;
+    dragging=false;
+    open=dx>reveal/2;
+    setX(open?reveal:0);
+  };
+  row.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse' && e.button!==0)return;
+    if(e.target.closest('input,select,textarea,button,a'))return;
+    if(e.pointerType==='mouse')e.preventDefault();
+    startX=e.clientX;base=open?reveal:0;dx=base;moved=false;dragging=true;
+    try{row.setPointerCapture?.(e.pointerId)}catch(_){}
+  });
+  row.addEventListener('pointermove',e=>{
+    if(!dragging)return;
+    const delta=e.clientX-startX;
+    if(Math.abs(delta)>5)moved=true;
+    setX(base+delta);
+  });
+  row.addEventListener('pointerup',finish);
+  row.addEventListener('pointercancel',finish);
+
+  // Delete button is deliberately outside the draggable row.
+  // Stop pointer/click propagation so desktop and iPhone taps both fire reliably.
+  const del=shell.querySelector('.delete-action');
+  del.addEventListener('pointerdown',e=>e.stopPropagation());
+  del.addEventListener('click',e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    if(typeof onDelete==='function') onDelete();
+  });
+
+  row.addEventListener('click',e=>{
+    if(e.target.closest('input,select,textarea,button,a'))return;
+    if(moved){moved=false;return;}
+    if(open){open=false;setX(0);return;}
+    onClick&&onClick();
+  });
+}
+
+let pendingDelete=null;
+const deleteConfirm=document.getElementById('deleteConfirm');
+const deleteConfirmText=document.getElementById('deleteConfirmText');
+function requestDelete(message,action){
+  pendingDelete=action;
+  deleteConfirmText.textContent=message;
+  deleteConfirm.classList.add('open');
+  deleteConfirm.setAttribute('aria-hidden','false');
+}
+function closeDeleteConfirm(){
+  pendingDelete=null;
+  deleteConfirm.classList.remove('open');
+  deleteConfirm.setAttribute('aria-hidden','true');
+}
+document.getElementById('deleteCancel').addEventListener('click',closeDeleteConfirm);
+document.getElementById('deleteOK').addEventListener('click',()=>{
+  const action=pendingDelete;
+  closeDeleteConfirm();
+  if(action) action();
+});
+deleteConfirm.addEventListener('click',e=>{if(e.target===deleteConfirm)closeDeleteConfirm()});
+
+function renderExpenseList(){const list=document.getElementById('expenseList'),rows=db[active]||[];if(!rows.length){list.innerHTML='<div class="empty">目前還沒有紀錄 ♡</div>';return}list.innerHTML=rows.map((x,i)=>swipeHTML(i,`<div class="expense-top"><div><div class="expense-name">${esc(x.name)}</div><div class="expense-meta">${x.date?esc(x.date)+' · ':''}${esc(x.payer)}</div></div><div class="expense-amount">${esc(x.currency)} ${esc(x.amount)}</div></div>`)).join('');list.querySelectorAll('.swipe-shell').forEach(shell=>{const i=+shell.dataset.i;setupSwipe(shell,shell.querySelector('.expense-row'),()=>requestDelete(`確定刪除「${db[active][i].name}」？`,()=>{db[active].splice(i,1);saveDB();renderPaid()}),()=>editExpense(i))})}
+function editExpense(i){const x=db[active][i],name=prompt('修改名稱',x.name);if(name===null)return;const amount=prompt('修改金額',x.amount);if(amount===null)return;x.name=name;x.amount=amount;saveDB();renderPaid()}
+function controlRow(obj,path){return `<div class="fixed-grid"><input data-path="${path}.amount" inputmode="decimal" value="${esc(obj.amount)}" placeholder="金額"><select data-path="${path}.currency">${opts(currencies,obj.currency)}</select><select data-path="${path}.payer">${opts(payers,obj.payer||'無')}</select></div>`}
+function renderOther(){panel.innerHTML=`<div class="fixed-list"><div class="fixed-item"><div class="fixed-title">✈️ 機票</div>${controlRow(db.other.flight,'other.flight')}</div><div class="fixed-item"><div class="fixed-title">🚕 計程車</div><div id="taxiList" class="transport-add"></div><div class="other-actions"><button type="button" id="addTaxi">＋ 新增計程車</button></div></div><div class="fixed-item"><div class="fixed-title">🚃 地鐵 / JR</div><div id="metroList" class="transport-add"></div><div class="other-actions"><button type="button" id="addMetro">＋ 新增交通</button></div></div><div class="fixed-item"><div class="fixed-title">🏨 飯店</div>${db.other.hotels.map((h,i)=>`<div class="fixed-label">${esc(h.label)}</div>${controlRow(h,`other.hotels.${i}`)}`).join('')}</div><div class="fixed-item"><div class="fixed-title">🛡️ 旅平險</div>${db.other.insurance.map((x,i)=>`<div class="fixed-label">${esc(x.label)}</div>${controlRow(x,`other.insurance.${i}`)}`).join('')}</div></div><div class="hint">這個預覽版仍先存在本機；正式 GitHub 版本會把這些資料改接 Supabase 共用。</div>`;renderTransport('taxis','taxiList','計程車');renderTransport('metros','metroList','交通');document.getElementById('addTaxi').onclick=()=>{db.other.taxis.push({date:'1/16',name:'',amount:'',currency:'JPY',payer:'無'});saveDB();renderOther()};document.getElementById('addMetro').onclick=()=>{db.other.metros.push({date:'1/16',name:'',amount:'',currency:'JPY',payer:'無'});saveDB();renderOther()};bindOtherControls()}
+function renderTransport(key,id,label){const box=document.getElementById(id),arr=db.other[key];if(!arr.length){box.innerHTML='<div class="empty">目前沒有紀錄</div>';return}box.innerHTML=arr.map((x,i)=>swipeHTML(i,`<div class="field-row"><div class="field"><label>日期</label><select data-tkey="${key}" data-i="${i}" data-f="date">${opts(dates,x.date)}</select></div><div class="field"><label>名稱</label><input data-tkey="${key}" data-i="${i}" data-f="name" value="${esc(x.name)}" placeholder="${label}名稱"></div></div><div class="fixed-grid" style="margin-top:7px"><input data-tkey="${key}" data-i="${i}" data-f="amount" inputmode="decimal" value="${esc(x.amount)}" placeholder="金額"><select data-tkey="${key}" data-i="${i}" data-f="currency">${opts(currencies,x.currency)}</select><select data-tkey="${key}" data-i="${i}" data-f="payer">${opts(payers,x.payer||'無')}</select></div>`,key)).join('');box.querySelectorAll('[data-tkey]').forEach(el=>el.onchange=el.oninput=()=>{db.other[el.dataset.tkey][+el.dataset.i][el.dataset.f]=el.value;saveDB()});box.querySelectorAll('.swipe-shell').forEach(shell=>{const i=+shell.dataset.i;setupSwipe(shell,shell.querySelector('.expense-row'),()=>requestDelete(`確定刪除這筆${label}？`,()=>{db.other[key].splice(i,1);saveDB();renderOther()}),null)})}
+function setPath(path,value){const parts=path.split('.');let o=db;for(let i=0;i<parts.length-1;i++)o=o[parts[i]];o[parts.at(-1)]=value;saveDB()}
+function bindOtherControls(){document.querySelectorAll('[data-path]').forEach(el=>el.onchange=el.oninput=()=>setPath(el.dataset.path,el.value))}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{active=active===b.dataset.tab?null:b.dataset.tab;renderPaid()});
+
+/* Important */
+const impList=document.getElementById('importantList');
+function renderImportant(){impList.innerHTML=db.important.map((x,i)=>`<div class="swipe-shell" data-i="${i}"><button class="delete-action" type="button">🗑</button><div class="important-row ${x.done?'done':''}"><button type="button" class="circle ${x.done?'done':''}" aria-label="完成"></button><span class="important-text">${esc(x.text)}</span></div></div>`).join('')||'<div class="empty">目前沒有事項</div>';impList.querySelectorAll('.swipe-shell').forEach(shell=>{const i=+shell.dataset.i,row=shell.querySelector('.important-row');setupSwipe(shell,row,()=>requestDelete(`確定刪除「${db.important[i].text}」？`,()=>{db.important.splice(i,1);saveDB();renderImportant()}),null);row.querySelector('.circle').onclick=e=>{e.stopPropagation();db.important[i].done=!db.important[i].done;saveDB();renderImportant()};row.querySelector('.important-text').onclick=e=>{e.stopPropagation();const v=prompt('修改事項',db.important[i].text);if(v!==null&&v.trim()){db.important[i].text=v.trim();saveDB();renderImportant()}}})}
+const importantForm=document.getElementById('importantForm');
+const importantInput=document.getElementById('importantInput');
+const importantAddBtn=document.getElementById('importantAddBtn');
+function addImportant(){
+  const text=importantInput.value.trim();
+  if(!text)return;
+  db.important.push({text,done:false});
+  importantInput.value='';
+  saveDB();
+  renderImportant();
+  importantInput.focus();
+}
+window.addImportant=addImportant;
+importantAddBtn.onclick=addImportant;
+importantInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addImportant();}});
+
+/* Schedule editor */
+const itemSheet=document.getElementById('itemSheet'),metaSheet=document.getElementById('metaSheet'),routeSheet=document.getElementById('routeSheet');
+function openSheet(el){el.classList.add('open');document.body.style.overflow='hidden'}function closeSheet(el){el.classList.remove('open');document.body.style.overflow=''}
+document.querySelectorAll('[data-close-sheet]').forEach(b=>b.onclick=()=>closeSheet(b.closest('.sheet-backdrop')));document.querySelectorAll('.sheet-backdrop').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)closeSheet(bg)}));
+function renderDay(){const info=dayInfo[currentDay],day=db.schedule[currentDay];document.getElementById('dayKicker').textContent=`${info.date} · ${info.weekday}`;document.getElementById('dayTitle').textContent=day.title||info.title;document.getElementById('daySubtitle').textContent=day.subtitle||info.subtitle;document.getElementById('editDayMeta').hidden=!editMode;document.getElementById('addItinerary').hidden=!editMode;document.getElementById('editToggle').textContent=editMode?'完成 ✓':'✎ 編輯';renderTimeline();renderRoute()}
+function renderTimeline(){const box=document.getElementById('timeline'),items=db.schedule[currentDay].items||[];if(!items.length){box.innerHTML=`<div class="day-empty">這一天還沒有行程${editMode?'，按下面「＋ 新增行程」開始加入。':'。'}</div>`;return}box.innerHTML=`<div class="timeline">${items.map((x,i)=>{const url=safeUrl(x.url);return `<div class="timeline-item"><div class="timeline-time">${esc(x.time||'--:--')}</div><div class="timeline-axis"><span class="timeline-dot"></span></div><div class="timeline-body"><div class="timeline-title">${url?`<a href="${esc(url)}" target="_blank" rel="noopener">${esc(x.title)}</a>`:esc(x.title)}</div>${x.description?`<div class="timeline-desc">${esc(x.description)}</div>`:''}${x.transport||x.transportMinutes?`<div class="transport">${esc(x.transport||'')} ${x.transportMinutes?`· ${esc(x.transportMinutes)} min`:''}</div>`:''}${editMode?`<div class="edit-tools"><button data-edit-item="${i}">✎ 修改</button><button data-up="${i}" ${i===0?'disabled':''}>↑</button><button data-down="${i}" ${i===items.length-1?'disabled':''}>↓</button></div>`:''}</div></div>`}).join('')}</div>`;box.querySelectorAll('[data-edit-item]').forEach(b=>b.onclick=()=>openItem(+b.dataset.editItem));box.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>moveItem(+b.dataset.up,-1));box.querySelectorAll('[data-down]').forEach(b=>b.onclick=()=>moveItem(+b.dataset.down,1))}
+function moveItem(i,delta){const arr=db.schedule[currentDay].items,j=i+delta;if(j<0||j>=arr.length)return;[arr[i],arr[j]]=[arr[j],arr[i]];saveDB();renderTimeline()}
+function openItem(index=null){const form=document.getElementById('itemForm'),editing=index!==null,x=editing?db.schedule[currentDay].items[index]:{time:'',title:'',description:'',url:'',transport:'',transportMinutes:''};form.elements.index.value=editing?index:'';for(const k of ['time','title','description','url','transport','transportMinutes'])form.elements[k].value=x[k]||'';document.getElementById('itemSheetTitle').textContent=editing?'編輯行程':'新增行程';document.getElementById('deleteItem').hidden=!editing;openSheet(itemSheet)}
+document.getElementById('addItinerary').onclick=()=>openItem();
+document.getElementById('itemForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target),obj={time:f.get('time'),title:f.get('title').trim(),description:f.get('description').trim(),url:f.get('url').trim(),transport:f.get('transport').trim(),transportMinutes:f.get('transportMinutes').trim()},idx=f.get('index');if(idx==='')db.schedule[currentDay].items.push(obj);else db.schedule[currentDay].items[+idx]=obj;saveDB();closeSheet(itemSheet);renderDay()};
+document.getElementById('deleteItem').onclick=()=>{const idx=document.getElementById('itemForm').elements.index.value;if(idx!=='')requestDelete('確定刪除這個行程？',()=>{db.schedule[currentDay].items.splice(+idx,1);saveDB();closeSheet(itemSheet);renderDay()})};
+document.getElementById('editToggle').onclick=()=>{editMode=!editMode;renderDay()};
+document.getElementById('editDayMeta').onclick=()=>{const day=db.schedule[currentDay],f=document.getElementById('metaForm');f.elements.title.value=day.title||'';f.elements.subtitle.value=day.subtitle||'';openSheet(metaSheet)};
+document.getElementById('metaForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);db.schedule[currentDay].title=f.get('title').trim();db.schedule[currentDay].subtitle=f.get('subtitle').trim();saveDB();closeSheet(metaSheet);renderDay();renderDateLinks()};
+function renderRoute(){
+  const routes=Array.isArray(db.schedule[currentDay].routes)?db.schedule[currentDay].routes:[];
+  const cards=routes.length?routes.map((r,i)=>{
+    const has=Object.values(r||{}).some(Boolean);
+    return `<div class="route-card card">
+      <div class="route-head"><div><div class="route-number">ROUTE ${String(i+1).padStart(2,'0')}</div><b>${esc(r.from||'起點')} <span class="route-arrow">→</span> ${esc(r.to||'終點')}</b></div>${editMode?`<button data-edit-route="${i}">✎ 編輯</button>`:''}</div>
+      ${has?`${r.line?`<div class="route-meta">${esc(r.line)}${r.duration||r.fare?`\n${esc([r.duration,r.fare].filter(Boolean).join(' · '))}`:''}${r.note?`\n${esc(r.note)}`:''}</div>`:''}${safeUrl(r.url)?`<a class="route-link" href="${esc(safeUrl(r.url))}" target="_blank" rel="noopener">開啟路線</a>`:''}`:'<div class="empty">尚未加入 Route</div>'}
+    </div>`;
+  }).join(''):`<div class="route-card card"><div class="empty">尚未加入 Route</div></div>`;
+  document.getElementById('routeArea').innerHTML=`<div class="route-section"><div class="route-section-head"><b>ROUTE</b>${editMode?'<button class="route-add" id="addRoute">＋ 新增 ROUTE</button>':''}</div>${cards}</div>`;
+  document.querySelectorAll('[data-edit-route]').forEach(b=>b.onclick=()=>openRoute(+b.dataset.editRoute));
+  const add=document.getElementById('addRoute');if(add)add.onclick=()=>openRoute();
+}
+function openRoute(index=null){
+  const routes=Array.isArray(db.schedule[currentDay].routes)?db.schedule[currentDay].routes:[];
+  const editing=index!==null;
+  const r=editing?(routes[index]||{}):{};
+  const f=document.getElementById('routeForm');
+  f.elements.index.value=editing?index:'';
+  for(const k of ['from','to','line','duration','fare','note','url'])f.elements[k].value=r[k]||'';
+  document.getElementById('routeSheetTitle').textContent=editing?'編輯 Route':'新增 Route';
+  document.getElementById('deleteRoute').hidden=!editing;
+  openSheet(routeSheet);
+}
+document.getElementById('routeForm').onsubmit=e=>{
+  e.preventDefault();
+  const f=new FormData(e.target),r={};
+  for(const k of ['from','to','line','duration','fare','note','url'])r[k]=(f.get(k)||'').trim();
+  const idx=f.get('index');
+  if(!Array.isArray(db.schedule[currentDay].routes))db.schedule[currentDay].routes=[];
+  if(idx==='')db.schedule[currentDay].routes.push(r);else db.schedule[currentDay].routes[+idx]=r;
+  saveDB();closeSheet(routeSheet);renderRoute();
+};
+document.getElementById('deleteRoute').onclick=()=>{
+  const idx=document.getElementById('routeForm').elements.index.value;
+  if(idx==='')return;
+  requestDelete('確定刪除這個 Route？',()=>{
+    db.schedule[currentDay].routes.splice(+idx,1);
+    saveDB();closeSheet(routeSheet);renderRoute();
+  });
+};
+
+/* FX: prototype rate only; final deployment should use live API */
+let rate=.215,lock=false;const j=document.getElementById('jpy'),t=document.getElementById('twd');function num(v){return parseFloat(String(v).replace(/,/g,''))||0}function fmt(v){return v?new Intl.NumberFormat('zh-TW',{maximumFractionDigits:2}).format(v):''}j.oninput=()=>{if(lock)return;lock=true;t.value=fmt(num(j.value)*rate);lock=false};t.oninput=()=>{if(lock)return;lock=true;j.value=fmt(num(t.value)/rate);lock=false};document.getElementById('swap').onclick=()=>{const a=j.value;j.value=t.value;t.value=a};
+
+renderPaid();renderImportant();renderDateLinks();route();
+</script>
+</body>
+</html>
