@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#D6A13A">
-<title>✧ ISA &amp; Do TOKYO Trip ✧</title>
+<title>ISA &amp; Do 2027 JAN IN TOKYO 🥳</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
 :root{
@@ -145,11 +145,42 @@ html,body{background:#E9E1D9}
 .delete-ok{border:0;background:var(--danger);color:#fff}
 .delete-action{pointer-events:auto}
 
+/* Supabase shared-trip login */
+#appRoot[hidden]{display:none!important}
+.login-gate{width:100%;max-width:430px;min-height:100dvh;margin:0 auto;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:28px 20px;box-shadow:0 0 40px rgba(69,43,37,.11)}
+.login-card{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:25px 20px;box-shadow:var(--shadow);text-align:center}
+.login-kicker{font-family:'Baloo 2','Noto Sans TC';font-size:12px;font-weight:700;letter-spacing:1.2px;color:var(--orange)}
+.login-card h1{font-family:'Baloo 2','Noto Sans TC';font-size:24px;line-height:1.15;color:var(--burgundy);margin:5px 0 6px}
+.login-card p{font-size:12px;line-height:1.6;color:var(--muted);margin:0 0 18px}
+.login-form{display:grid;gap:9px;text-align:left}
+.login-form label{font-size:10px;color:var(--muted);font-weight:700}
+.login-form input{width:100%;border:1px solid var(--line);border-radius:13px;background:white;padding:11px 12px;font-size:16px;outline:none}
+.login-form button{border:0;border-radius:13px;background:var(--burgundy);color:white;padding:11px 12px;font-weight:700}
+.login-form button:disabled{opacity:.55;cursor:wait}
+.login-message{min-height:18px;margin-top:9px;font-size:11px;color:var(--danger);text-align:center}
+.login-note{margin-top:12px;font-size:10px;color:var(--muted);line-height:1.55}
+.sync-toast{position:fixed;z-index:500;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translate(-50%,14px);max-width:calc(100% - 32px);background:#352B2D;color:#fff;border-radius:999px;padding:8px 13px;font-size:11px;font-weight:700;opacity:0;pointer-events:none;transition:.2s ease;white-space:nowrap}
+.sync-toast.show{opacity:.94;transform:translate(-50%,0)}
+
 </style>
 </head>
 <body>
-<main class="app">
-<header class="header"><a class="home-title" href="#home">✧ Isa &amp; Do TOKYO Trip ✧</a><div class="brand-line"></div></header>
+<section class="login-gate" id="loginGate">
+  <div class="login-card">
+    <div class="login-kicker">SHARED TRIP</div>
+    <h1>ISA &amp; Do<br>2027 JAN IN TOKYO 🥳</h1>
+    <p>第一次在這台裝置開啟時輸入旅行密碼。登入成功後會保持登入。</p>
+    <form class="login-form" id="loginForm">
+      <label for="tripPassword">旅行密碼</label>
+      <input id="tripPassword" type="password" autocomplete="current-password" placeholder="輸入旅行密碼" required>
+      <button id="loginBtn" type="submit">進入東京 ✈️</button>
+    </form>
+    <div class="login-message" id="loginMessage"></div>
+    <div class="login-note">ISA 和 Do 使用同一組旅行密碼。密碼不會寫在這個 HTML 裡。</div>
+  </div>
+</section>
+<main class="app" id="appRoot" hidden>
+<header class="header"><a class="home-title" href="#home">ISA &amp; Do 2027 JAN IN TOKYO 🥳</a><div class="brand-line"></div></header>
 
 <section id="homeView" class="view active">
   <div class="content">
@@ -180,7 +211,7 @@ html,body{background:#E9E1D9}
       </div>
     </section>
   </div>
-  <div class="footer">Isa &amp; Do JAN 2027 IN TOKYO</div>
+  <div class="footer">ISA &amp; Do 2027 JAN IN TOKYO 🥳</div>
 </section>
 
 <section id="dayView" class="view">
@@ -256,6 +287,9 @@ html,body{background:#E9E1D9}
   </div>
 </div>
 
+<div class="sync-toast" id="syncToast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const dates=['1/16','1/17','1/18','1/19','1/20','1/21'];
 const currencies=['JPY','TWD','USD'];
@@ -300,17 +334,186 @@ function clone(x){return JSON.parse(JSON.stringify(x))}
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function safeUrl(url=''){try{const u=new URL(url);return ['http:','https:'].includes(u.protocol)?u.href:''}catch{return ''}}
 function mergeSchedule(saved={}){const out=clone(defaultSchedule);for(const key of Object.keys(out)){if(!saved[key])continue;const prior=saved[key];let routes;if(Array.isArray(prior.routes))routes=prior.routes;else if(prior.route&&Object.values(prior.route).some(Boolean))routes=[prior.route];else routes=out[key].routes||[];out[key]={...out[key],...prior,items:Array.isArray(prior.items)?prior.items:out[key].items,routes};delete out[key].route}return out}
+const SUPABASE_URL='https://jqwtpzhcwtjuockjvvid.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_nLn_-CVACr9tHN1UF_CCeA__QehvKAr';
+const TRIP_EMAIL='isa-do-tokyo-2027@example.com';
+const TRIP_ID='tokyo-2027';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
+  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}
+});
+
+function normalizeDB(saved){
+  const base=clone(defaults);
+  if(!saved||typeof saved!=='object')return base;
+  const oldOther=saved.other&&typeof saved.other==='object'?saved.other:{};
+  return {
+    ...base,...saved,
+    food:Array.isArray(saved.food)?saved.food:base.food,
+    shopping:Array.isArray(saved.shopping)?saved.shopping:base.shopping,
+    ticket:Array.isArray(saved.ticket)?saved.ticket:base.ticket,
+    other:{
+      ...base.other,...oldOther,
+      flight:{...base.other.flight,...(oldOther.flight||{})},
+      taxis:Array.isArray(oldOther.taxis)?oldOther.taxis:base.other.taxis,
+      metros:Array.isArray(oldOther.metros)?oldOther.metros:base.other.metros,
+      hotels:Array.isArray(oldOther.hotels)?oldOther.hotels:base.other.hotels,
+      insurance:Array.isArray(oldOther.insurance)?oldOther.insurance:base.other.insurance
+    },
+    important:Array.isArray(saved.important)?saved.important:base.important,
+    schedule:mergeSchedule(saved.schedule||{})
+  };
+}
+
+function readLocalDraft(){
+  try{return normalizeDB(JSON.parse(localStorage.getItem(KEY)||'null'))}catch(e){return clone(defaults)}
+}
+
 let db=clone(defaults);
-try{const old=JSON.parse(localStorage.getItem(KEY)||'null');if(old){db={...db,...old,other:{...db.other,...(old.other||{})},schedule:mergeSchedule(old.schedule||{})}}}catch(e){}
+let cloudReady=false;
+let realtimeChannel=null;
+let saveTimer=null;
+let saveChain=Promise.resolve();
+let lastCloudJSON='';
+let toastTimer=null;
+
+function showToast(message){
+  const el=document.getElementById('syncToast');
+  if(!el)return;
+  el.textContent=message;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+function cacheLocal(){
+  try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){console.warn('Local cache unavailable.',e)}
+}
+
+function renderCurrentView(){
+  renderPaid();
+  renderImportant();
+  renderDateLinks();
+  if(currentDay&&document.getElementById('dayView').classList.contains('active'))renderDay();
+}
+
+function pushCloud(snapshot){
+  saveChain=saveChain.then(async()=>{
+    const json=JSON.stringify(snapshot);
+    if(json===lastCloudJSON)return;
+    const {data,error}=await sb.from('trip_state')
+      .update({state:snapshot,updated_at:new Date().toISOString()})
+      .eq('id',TRIP_ID)
+      .select('state,updated_at')
+      .single();
+    if(error){
+      console.error('Supabase save failed:',error);
+      showToast('⚠️ 尚未同步，請確認網路');
+      return;
+    }
+    lastCloudJSON=JSON.stringify(data.state||snapshot);
+  }).catch(err=>{console.error(err);showToast('⚠️ 尚未同步，請確認網路')});
+}
+
 function saveDB(){
-  try{
-    localStorage.setItem(KEY,JSON.stringify(db));
-    return true;
-  }catch(e){
-    console.warn('Storage unavailable; keeping changes for this open page.',e);
-    return false;
+  cacheLocal();
+  if(!cloudReady)return false;
+  clearTimeout(saveTimer);
+  const snapshot=clone(db);
+  saveTimer=setTimeout(()=>pushCloud(snapshot),180);
+  return true;
+}
+
+async function loadTripState(){
+  const {data,error}=await sb.from('trip_state').select('state,updated_at').eq('id',TRIP_ID).single();
+  if(error)throw error;
+  if(data&&data.state){
+    db=normalizeDB(data.state);
+    lastCloudJSON=JSON.stringify(data.state);
+    cacheLocal();
+  }else{
+    db=readLocalDraft();
+    const {data:seeded,error:seedError}=await sb.from('trip_state')
+      .update({state:db,updated_at:new Date().toISOString()})
+      .eq('id',TRIP_ID)
+      .select('state,updated_at')
+      .single();
+    if(seedError)throw seedError;
+    lastCloudJSON=JSON.stringify(seeded.state||db);
+    cacheLocal();
   }
 }
+
+function startRealtime(){
+  if(realtimeChannel)sb.removeChannel(realtimeChannel);
+  realtimeChannel=sb.channel('isa-do-tokyo-2027-shared')
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'trip_state',filter:`id=eq.${TRIP_ID}`},payload=>{
+      const next=payload.new&&payload.new.state;
+      if(!next)return;
+      const nextJSON=JSON.stringify(next);
+      if(nextJSON===JSON.stringify(db)){lastCloudJSON=nextJSON;return}
+      db=normalizeDB(next);
+      lastCloudJSON=nextJSON;
+      cacheLocal();
+      renderCurrentView();
+      showToast('☁️ 已同步另一台裝置的更新');
+    })
+    .subscribe(status=>{
+      if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('Realtime status:',status);
+    });
+}
+
+function showLogin(message=''){
+  document.getElementById('appRoot').hidden=true;
+  document.getElementById('loginGate').style.display='flex';
+  document.getElementById('loginMessage').textContent=message;
+}
+
+function showApp(){
+  document.getElementById('loginGate').style.display='none';
+  document.getElementById('appRoot').hidden=false;
+}
+
+async function enterTrip(){
+  cloudReady=false;
+  try{
+    await loadTripState();
+    cloudReady=true;
+    startRealtime();
+    showApp();
+    renderCurrentView();
+    route();
+  }catch(error){
+    console.error('Unable to load trip:',error);
+    showLogin('目前無法讀取共用資料，請確認網路後再試。');
+  }
+}
+
+async function initAuth(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){await enterTrip();return}
+  showLogin();
+}
+
+document.getElementById('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const password=document.getElementById('tripPassword').value;
+  const btn=document.getElementById('loginBtn');
+  const msg=document.getElementById('loginMessage');
+  btn.disabled=true;msg.textContent='登入中…';
+  const {error}=await sb.auth.signInWithPassword({email:TRIP_EMAIL,password});
+  document.getElementById('tripPassword').value='';
+  if(error){
+    console.error('Login failed:',error);
+    msg.textContent=/email not confirmed/i.test(error.message||'')
+      ?'共用旅行帳號尚未確認 Email，請回 Supabase Users 將帳號設為已確認。'
+      :'旅行密碼不正確，請再試一次。';
+    btn.disabled=false;
+    return;
+  }
+  msg.textContent='';
+  btn.disabled=false;
+  await enterTrip();
+});
 function opts(arr,selected){return arr.map(x=>`<option ${x===selected?'selected':''}>${x}</option>`).join('')}
 
 /* Router */
@@ -400,7 +603,7 @@ deleteConfirm.addEventListener('click',e=>{if(e.target===deleteConfirm)closeDele
 function renderExpenseList(){const list=document.getElementById('expenseList'),rows=db[active]||[];if(!rows.length){list.innerHTML='<div class="empty">目前還沒有紀錄 ♡</div>';return}list.innerHTML=rows.map((x,i)=>swipeHTML(i,`<div class="expense-top"><div><div class="expense-name">${esc(x.name)}</div><div class="expense-meta">${x.date?esc(x.date)+' · ':''}${esc(x.payer)}</div></div><div class="expense-amount">${esc(x.currency)} ${esc(x.amount)}</div></div>`)).join('');list.querySelectorAll('.swipe-shell').forEach(shell=>{const i=+shell.dataset.i;setupSwipe(shell,shell.querySelector('.expense-row'),()=>requestDelete(`確定刪除「${db[active][i].name}」？`,()=>{db[active].splice(i,1);saveDB();renderPaid()}),()=>editExpense(i))})}
 function editExpense(i){const x=db[active][i],name=prompt('修改名稱',x.name);if(name===null)return;const amount=prompt('修改金額',x.amount);if(amount===null)return;x.name=name;x.amount=amount;saveDB();renderPaid()}
 function controlRow(obj,path){return `<div class="fixed-grid"><input data-path="${path}.amount" inputmode="decimal" value="${esc(obj.amount)}" placeholder="金額"><select data-path="${path}.currency">${opts(currencies,obj.currency)}</select><select data-path="${path}.payer">${opts(payers,obj.payer||'無')}</select></div>`}
-function renderOther(){panel.innerHTML=`<div class="fixed-list"><div class="fixed-item"><div class="fixed-title">✈️ 機票</div>${controlRow(db.other.flight,'other.flight')}</div><div class="fixed-item"><div class="fixed-title">🚕 計程車</div><div id="taxiList" class="transport-add"></div><div class="other-actions"><button type="button" id="addTaxi">＋ 新增計程車</button></div></div><div class="fixed-item"><div class="fixed-title">🚃 地鐵 / JR</div><div id="metroList" class="transport-add"></div><div class="other-actions"><button type="button" id="addMetro">＋ 新增交通</button></div></div><div class="fixed-item"><div class="fixed-title">🏨 飯店</div>${db.other.hotels.map((h,i)=>`<div class="fixed-label">${esc(h.label)}</div>${controlRow(h,`other.hotels.${i}`)}`).join('')}</div><div class="fixed-item"><div class="fixed-title">🛡️ 旅平險</div>${db.other.insurance.map((x,i)=>`<div class="fixed-label">${esc(x.label)}</div>${controlRow(x,`other.insurance.${i}`)}`).join('')}</div></div><div class="hint">這個預覽版仍先存在本機；正式 GitHub 版本會把這些資料改接 Supabase 共用。</div>`;renderTransport('taxis','taxiList','計程車');renderTransport('metros','metroList','交通');document.getElementById('addTaxi').onclick=()=>{db.other.taxis.push({date:'1/16',name:'',amount:'',currency:'JPY',payer:'無'});saveDB();renderOther()};document.getElementById('addMetro').onclick=()=>{db.other.metros.push({date:'1/16',name:'',amount:'',currency:'JPY',payer:'無'});saveDB();renderOther()};bindOtherControls()}
+function renderOther(){panel.innerHTML=`<div class="fixed-list"><div class="fixed-item"><div class="fixed-title">✈️ 機票</div>${controlRow(db.other.flight,'other.flight')}</div><div class="fixed-item"><div class="fixed-title">🚕 計程車</div><div id="taxiList" class="transport-add"></div><div class="other-actions"><button type="button" id="addTaxi">＋ 新增計程車</button></div></div><div class="fixed-item"><div class="fixed-title">🚃 地鐵 / JR</div><div id="metroList" class="transport-add"></div><div class="other-actions"><button type="button" id="addMetro">＋ 新增交通</button></div></div><div class="fixed-item"><div class="fixed-title">🏨 飯店</div>${db.other.hotels.map((h,i)=>`<div class="fixed-label">${esc(h.label)}</div>${controlRow(h,`other.hotels.${i}`)}`).join('')}</div><div class="fixed-item"><div class="fixed-title">🛡️ 旅平險</div>${db.other.insurance.map((x,i)=>`<div class="fixed-label">${esc(x.label)}</div>${controlRow(x,`other.insurance.${i}`)}`).join('')}</div></div><div class="hint">ISA 和 Do 共用 Supabase 雲端資料；修改後會自動同步。</div>`;renderTransport('taxis','taxiList','計程車');renderTransport('metros','metroList','交通');document.getElementById('addTaxi').onclick=()=>{db.other.taxis.push({date:'1/16',name:'',amount:'',currency:'JPY',payer:'無'});saveDB();renderOther()};document.getElementById('addMetro').onclick=()=>{db.other.metros.push({date:'1/16',name:'',amount:'',currency:'JPY',payer:'無'});saveDB();renderOther()};bindOtherControls()}
 function renderTransport(key,id,label){const box=document.getElementById(id),arr=db.other[key];if(!arr.length){box.innerHTML='<div class="empty">目前沒有紀錄</div>';return}box.innerHTML=arr.map((x,i)=>swipeHTML(i,`<div class="field-row"><div class="field"><label>日期</label><select data-tkey="${key}" data-i="${i}" data-f="date">${opts(dates,x.date)}</select></div><div class="field"><label>名稱</label><input data-tkey="${key}" data-i="${i}" data-f="name" value="${esc(x.name)}" placeholder="${label}名稱"></div></div><div class="fixed-grid" style="margin-top:7px"><input data-tkey="${key}" data-i="${i}" data-f="amount" inputmode="decimal" value="${esc(x.amount)}" placeholder="金額"><select data-tkey="${key}" data-i="${i}" data-f="currency">${opts(currencies,x.currency)}</select><select data-tkey="${key}" data-i="${i}" data-f="payer">${opts(payers,x.payer||'無')}</select></div>`,key)).join('');box.querySelectorAll('[data-tkey]').forEach(el=>el.onchange=el.oninput=()=>{db.other[el.dataset.tkey][+el.dataset.i][el.dataset.f]=el.value;saveDB()});box.querySelectorAll('.swipe-shell').forEach(shell=>{const i=+shell.dataset.i;setupSwipe(shell,shell.querySelector('.expense-row'),()=>requestDelete(`確定刪除這筆${label}？`,()=>{db.other[key].splice(i,1);saveDB();renderOther()}),null)})}
 function setPath(path,value){const parts=path.split('.');let o=db;for(let i=0;i<parts.length-1;i++)o=o[parts[i]];o[parts.at(-1)]=value;saveDB()}
 function bindOtherControls(){document.querySelectorAll('[data-path]').forEach(el=>el.onchange=el.oninput=()=>setPath(el.dataset.path,el.value))}
@@ -484,7 +687,7 @@ document.getElementById('deleteRoute').onclick=()=>{
 /* FX: prototype rate only; final deployment should use live API */
 let rate=.215,lock=false;const j=document.getElementById('jpy'),t=document.getElementById('twd');function num(v){return parseFloat(String(v).replace(/,/g,''))||0}function fmt(v){return v?new Intl.NumberFormat('zh-TW',{maximumFractionDigits:2}).format(v):''}j.oninput=()=>{if(lock)return;lock=true;t.value=fmt(num(j.value)*rate);lock=false};t.oninput=()=>{if(lock)return;lock=true;j.value=fmt(num(t.value)/rate);lock=false};document.getElementById('swap').onclick=()=>{const a=j.value;j.value=t.value;t.value=a};
 
-renderPaid();renderImportant();renderDateLinks();route();
+initAuth();
 </script>
 </body>
 </html>
