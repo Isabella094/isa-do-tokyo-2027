@@ -648,9 +648,14 @@ function renderRoute(){
     const has=Object.values(r||{}).some(Boolean);
     // 相容舊資料：舊版只有 from / to 時，自動合成 NOTE 標題，不會讓原本資料消失。
     const noteTitle=(r.title||[r.from,r.to].filter(Boolean).join(' → ')||'未命名 NOTE').trim();
+    // 路線、時間/價格、備註各自獨立顯示；即使「路線」留白，備註仍會出現在 NOTE 卡片。
+    const metaLines=[];
+    if(r.line)metaLines.push(r.line);
+    if(r.duration||r.fare)metaLines.push([r.duration,r.fare].filter(Boolean).join(' · '));
+    if(r.note)metaLines.push(r.note);
     return `<div class="route-card card">
       <div class="route-head"><div><div class="route-number">NOTE ${String(i+1).padStart(2,'0')}</div><b>${esc(noteTitle)}</b></div>${editMode?`<button data-edit-route="${i}">✎ 編輯</button>`:''}</div>
-      ${has?`${r.line?`<div class="route-meta">${esc(r.line)}${r.duration||r.fare?`\n${esc([r.duration,r.fare].filter(Boolean).join(' · '))}`:''}${r.note?`\n${esc(r.note)}`:''}</div>`:''}${safeUrl(r.url)?`<a class="route-link" href="${esc(safeUrl(r.url))}" target="_blank" rel="noopener">開啟路線</a>`:''}`:'<div class="empty">尚未加入 NOTE</div>'}
+      ${has?`${metaLines.length?`<div class="route-meta">${esc(metaLines.join('\n'))}</div>`:''}${safeUrl(r.url)?`<a class="route-link" href="${esc(safeUrl(r.url))}" target="_blank" rel="noopener">開啟路線</a>`:''}`:'<div class="empty">尚未加入 NOTE</div>'}
     </div>`;
   }).join(''):`<div class="route-card card"><div class="empty">尚未加入 NOTE</div></div>`;
   document.getElementById('routeArea').innerHTML=`<div class="route-section"><div class="route-section-head"><b>NOTE</b>${editMode?'<button class="route-add" id="addRoute">＋ 新增 NOTE</button>':''}</div>${cards}</div>`;
