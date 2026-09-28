@@ -262,16 +262,16 @@ html,body{background:#E9E1D9}
 <div class="sheet-backdrop" id="routeSheet">
   <div class="sheet">
     <button class="close-x" type="button" data-close-sheet>×</button><div class="grab"></div>
-    <h3 id="routeSheetTitle">新增 Route</h3>
+    <h3 id="routeSheetTitle">新增 NOTE</h3>
     <form id="routeForm" class="sheet-form">
       <input type="hidden" name="index" value="">
-      <div class="field-row"><div class="field"><label>起點</label><input name="from"></div><div class="field"><label>終點</label><input name="to"></div></div>
+      <div class="field"><label>標題</label><input name="title" placeholder="例如 羽田 T3 → 淺草"></div>
       <div class="field"><label>路線</label><input name="line" placeholder="例如 京急機場線・快特"></div>
       <div class="field-row"><div class="field"><label>時間</label><input name="duration" placeholder="38 min"></div><div class="field"><label>價格</label><input name="fare" placeholder="¥599"></div></div>
       <div class="field"><label>備註</label><textarea name="note" placeholder="方向、出口、是否需換車…"></textarea></div>
       <div class="field"><label>超連結</label><input name="url" type="url" placeholder="Google Maps / 路線網址"></div>
       <div class="sheet-actions"><button type="button" class="secondary" data-close-sheet>取消</button><button class="primary" type="submit">儲存</button></div>
-      <button type="button" class="danger-text" id="deleteRoute" hidden>刪除這個 Route</button>
+      <button type="button" class="danger-text" id="deleteRoute" hidden>刪除這個 NOTE</button>
     </form>
   </div>
 </div>
@@ -314,7 +314,7 @@ const defaultSchedule={
       {time:'15:00',title:'里士滿酒店淺草',description:'14:00 起可 Check-in\n先休息、放行李',url:'https://www.google.com/maps/search/?api=1&query=Richmond+Hotel+Asakusa+Tokyo',transport:'🚶 步行',transportMinutes:'10'},
       {time:'15:40',title:'隅田公園（淺草側）',description:'散步、拍晴空塔',url:'https://www.google.com/maps/search/?api=1&query=Sumida+Park+Asakusa+Tokyo',transport:'',transportMinutes:''}
     ],
-    routes:[{from:'羽田 T3',to:'淺草',line:'京急機場線 → 都營淺草線・直通',duration:'38 min',fare:'IC ¥599',note:'不用換車 · 往京成高砂方向\n淺草 A2b 出口有電梯',url:'https://www.google.com/maps/dir/Haneda+Airport+Terminal+3/Asakusa,+Tokyo/'}]
+    routes:[{title:'羽田 T3 → 淺草',line:'京急機場線 → 都營淺草線・直通',duration:'38 min',fare:'IC ¥599',note:'不用換車 · 往京成高砂方向\n淺草 A2b 出口有電梯',url:'https://www.google.com/maps/dir/Haneda+Airport+Terminal+3/Asakusa,+Tokyo/'}]
   },
   day0117:{title:'東京西側',subtitle:'MEIJI · HARAJUKU · SHIBUYA · SHINJUKU',items:[],routes:[]},
   day0118:{title:'東京中央',subtitle:'IMPERIAL PALACE · GINZA · TOKYO TOWER',items:[],routes:[]},
@@ -646,12 +646,14 @@ function renderRoute(){
   const routes=Array.isArray(db.schedule[currentDay].routes)?db.schedule[currentDay].routes:[];
   const cards=routes.length?routes.map((r,i)=>{
     const has=Object.values(r||{}).some(Boolean);
+    // 相容舊資料：舊版只有 from / to 時，自動合成 NOTE 標題，不會讓原本資料消失。
+    const noteTitle=(r.title||[r.from,r.to].filter(Boolean).join(' → ')||'未命名 NOTE').trim();
     return `<div class="route-card card">
-      <div class="route-head"><div><div class="route-number">ROUTE ${String(i+1).padStart(2,'0')}</div><b>${esc(r.from||'起點')} <span class="route-arrow">→</span> ${esc(r.to||'終點')}</b></div>${editMode?`<button data-edit-route="${i}">✎ 編輯</button>`:''}</div>
-      ${has?`${r.line?`<div class="route-meta">${esc(r.line)}${r.duration||r.fare?`\n${esc([r.duration,r.fare].filter(Boolean).join(' · '))}`:''}${r.note?`\n${esc(r.note)}`:''}</div>`:''}${safeUrl(r.url)?`<a class="route-link" href="${esc(safeUrl(r.url))}" target="_blank" rel="noopener">開啟路線</a>`:''}`:'<div class="empty">尚未加入 Route</div>'}
+      <div class="route-head"><div><div class="route-number">NOTE ${String(i+1).padStart(2,'0')}</div><b>${esc(noteTitle)}</b></div>${editMode?`<button data-edit-route="${i}">✎ 編輯</button>`:''}</div>
+      ${has?`${r.line?`<div class="route-meta">${esc(r.line)}${r.duration||r.fare?`\n${esc([r.duration,r.fare].filter(Boolean).join(' · '))}`:''}${r.note?`\n${esc(r.note)}`:''}</div>`:''}${safeUrl(r.url)?`<a class="route-link" href="${esc(safeUrl(r.url))}" target="_blank" rel="noopener">開啟路線</a>`:''}`:'<div class="empty">尚未加入 NOTE</div>'}
     </div>`;
-  }).join(''):`<div class="route-card card"><div class="empty">尚未加入 Route</div></div>`;
-  document.getElementById('routeArea').innerHTML=`<div class="route-section"><div class="route-section-head"><b>ROUTE</b>${editMode?'<button class="route-add" id="addRoute">＋ 新增 ROUTE</button>':''}</div>${cards}</div>`;
+  }).join(''):`<div class="route-card card"><div class="empty">尚未加入 NOTE</div></div>`;
+  document.getElementById('routeArea').innerHTML=`<div class="route-section"><div class="route-section-head"><b>NOTE</b>${editMode?'<button class="route-add" id="addRoute">＋ 新增 NOTE</button>':''}</div>${cards}</div>`;
   document.querySelectorAll('[data-edit-route]').forEach(b=>b.onclick=()=>openRoute(+b.dataset.editRoute));
   const add=document.getElementById('addRoute');if(add)add.onclick=()=>openRoute();
 }
@@ -661,15 +663,16 @@ function openRoute(index=null){
   const r=editing?(routes[index]||{}):{};
   const f=document.getElementById('routeForm');
   f.elements.index.value=editing?index:'';
-  for(const k of ['from','to','line','duration','fare','note','url'])f.elements[k].value=r[k]||'';
-  document.getElementById('routeSheetTitle').textContent=editing?'編輯 Route':'新增 Route';
+  f.elements.title.value=r.title||[r.from,r.to].filter(Boolean).join(' → ')||'';
+  for(const k of ['line','duration','fare','note','url'])f.elements[k].value=r[k]||'';
+  document.getElementById('routeSheetTitle').textContent=editing?'編輯 NOTE':'新增 NOTE';
   document.getElementById('deleteRoute').hidden=!editing;
   openSheet(routeSheet);
 }
 document.getElementById('routeForm').onsubmit=e=>{
   e.preventDefault();
   const f=new FormData(e.target),r={};
-  for(const k of ['from','to','line','duration','fare','note','url'])r[k]=(f.get(k)||'').trim();
+  for(const k of ['title','line','duration','fare','note','url'])r[k]=(f.get(k)||'').trim();
   const idx=f.get('index');
   if(!Array.isArray(db.schedule[currentDay].routes))db.schedule[currentDay].routes=[];
   if(idx==='')db.schedule[currentDay].routes.push(r);else db.schedule[currentDay].routes[+idx]=r;
@@ -678,7 +681,7 @@ document.getElementById('routeForm').onsubmit=e=>{
 document.getElementById('deleteRoute').onclick=()=>{
   const idx=document.getElementById('routeForm').elements.index.value;
   if(idx==='')return;
-  requestDelete('確定刪除這個 Route？',()=>{
+  requestDelete('確定刪除這個 NOTE？',()=>{
     db.schedule[currentDay].routes.splice(+idx,1);
     saveDB();closeSheet(routeSheet);renderRoute();
   });
