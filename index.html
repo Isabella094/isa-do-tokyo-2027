@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- ISA & Do: live daily FX + calculator + PAID collapse, 2026-10-14 -->
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
@@ -162,6 +163,17 @@ html,body{background:#E9E1D9}
 .sync-toast{position:fixed;z-index:500;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translate(-50%,14px);max-width:calc(100% - 32px);background:#352B2D;color:#fff;border-radius:999px;padding:8px 13px;font-size:11px;font-weight:700;opacity:0;pointer-events:none;transition:.2s ease;white-space:nowrap}
 .sync-toast.show{opacity:.94;transform:translate(-50%,0)}
 
+
+/* FX live reference rates, inline calculator, and PAID title hint */
+.fx-tools{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-top:9px}
+.fx-tools button{border:1px solid var(--line);background:var(--paper);border-radius:9px;padding:6px 0;font-size:13px;font-weight:700;color:var(--burgundy);min-width:0}
+.fx-tools .fx-equals{background:var(--burgundy);border-color:var(--burgundy);color:#fff}
+.fx-status-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-top:7px}
+.fx-status{color:var(--muted);font-size:10px;line-height:1.55;min-width:0;flex:1}
+.fx-refresh{border:0;background:transparent;color:var(--burgundy);font-size:10px;font-weight:700;padding:0;white-space:nowrap}
+.paid-title-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.paid-title-row .section-title{margin-bottom:0}
+.paid-collapse-hint{font-size:9px;color:#93898A;font-weight:400;white-space:nowrap;line-height:1.4}
 </style>
 </head>
 <body>
@@ -176,7 +188,7 @@ html,body{background:#E9E1D9}
       <button id="loginBtn" type="submit">進入東京 ✈️</button>
     </form>
     <div class="login-message" id="loginMessage"></div>
-    <div class="login-note"> 歡迎光臨 ✈︎ </div>
+    <div class="login-note">ISA 和 Do 使用同一組旅行密碼。密碼不會寫在這個 HTML 裡。</div>
   </div>
 </section>
 <main class="app" id="appRoot" hidden>
@@ -187,10 +199,22 @@ html,body{background:#E9E1D9}
     <section class="section">
       <h2 class="section-title"><span class="dot"></span>EXCHANGE</h2>
       <div class="fx"><div class="fxbox"><div class="fxlabel">🇯🇵 JPY</div><input id="jpy" inputmode="decimal" placeholder="¥ 10,000"></div><button class="swap" id="swap" aria-label="切換">⇄</button><div class="fxbox"><div class="fxlabel">🇹🇼 TWD</div><input id="twd" inputmode="decimal" placeholder="$ 2,xxx"></div></div>
+      <div class="fx-tools" role="group" aria-label="匯率計算機">
+        <button type="button" data-fx-key="+" aria-label="加">＋</button>
+        <button type="button" data-fx-key="-" aria-label="減">－</button>
+        <button type="button" data-fx-key="*" aria-label="乘">×</button>
+        <button type="button" data-fx-key="/" aria-label="除">÷</button>
+        <button type="button" class="fx-equals" data-fx-key="=" aria-label="等於">＝</button>
+        <button type="button" data-fx-key="clear" aria-label="清除">清除</button>
+      </div>
+      <div class="fx-status-row"><div class="fx-status" id="fxStatus" role="status" aria-live="polite">正在取得最新參考匯率…</div><button class="fx-refresh" id="fxRefresh" type="button">↻ 更新</button></div>
     </section>
 
     <section class="section">
-      <h2 class="section-title"><span class="dot red"></span>PAID</h2>
+      <div class="paid-title-row">
+        <h2 class="section-title"><span class="dot red"></span>PAID</h2>
+        <span class="paid-collapse-hint">再按一次即可收起來</span>
+      </div>
       <div class="paid card">
         <div class="tabs"><button class="tab" data-tab="food">吃飯</button><button class="tab" data-tab="shopping">購物</button><button class="tab" data-tab="ticket">票券</button><button class="tab" data-tab="other">其他</button></div>
         <div id="panel"></div>
@@ -530,7 +554,7 @@ function renderPaid(){
   if(!active){panel.innerHTML='';return}
   if(active==='other'){renderOther();return}
   const isTicket=active==='ticket';const label=active==='food'?'餐廳名稱':active==='shopping'?'店家':'票券／店家';
-  panel.innerHTML=`<form class="entry-form" id="entryForm">${isTicket?'':`<div class="field"><label>日期</label><select name="date">${opts(dates,'1/16')}</select></div>`}<div class="field"><label>${label}</label><input name="name" placeholder="輸入${label}" required></div><div class="field-row"><div class="field"><label>金額＋幣別</label><div class="money"><input name="amount" inputmode="decimal" placeholder="金額" required><select name="currency">${opts(currencies,'JPY')}</select></div></div><div class="field"><label>付款人</label><select name="payer">${opts(payers,'無')}</select></div></div><button class="primary">＋ 儲存這一筆</button></form><div class="list" id="expenseList"></div><div class="hint">點一下可修改；往右滑會露出刪除鍵。</div>`;
+  panel.innerHTML=`<form class="entry-form" id="entryForm">${isTicket?'':`<div class="field"><label>日期</label><select name="date">${opts(dates,'1/16')}</select></div>`}<div class="field"><label>${label}</label><input name="name" placeholder="輸入${label}" required></div><div class="field-row"><div class="field"><label>金額＋幣別</label><div class="money"><input name="amount" inputmode="decimal" placeholder="金額" required><select name="currency">${opts(currencies,'JPY')}</select></div></div><div class="field"><label>付款人</label><select name="payer">${opts(payers,'無')}</select></div></div><button class="primary">＋ 儲存這一筆</button></form><div class="list" id="expenseList"></div><div class="hint">點一下可修改；手機往右滑會露出刪除鍵。</div>`;
   document.getElementById('entryForm').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);db[active].push({date:f.get('date')||'',name:f.get('name'),amount:f.get('amount'),currency:f.get('currency'),payer:f.get('payer')});saveDB();renderPaid()};renderExpenseList();
 }
 function swipeHTML(i,inner,kind='expense'){return `<div class="swipe-shell" data-i="${i}" data-kind="${kind}"><button class="delete-action" type="button">🗑</button><div class="expense-row">${inner}</div></div>`}
@@ -603,7 +627,7 @@ deleteConfirm.addEventListener('click',e=>{if(e.target===deleteConfirm)closeDele
 function renderExpenseList(){const list=document.getElementById('expenseList'),rows=db[active]||[];if(!rows.length){list.innerHTML='<div class="empty">目前還沒有紀錄 ♡</div>';return}list.innerHTML=rows.map((x,i)=>swipeHTML(i,`<div class="expense-top"><div><div class="expense-name">${esc(x.name)}</div><div class="expense-meta">${x.date?esc(x.date)+' · ':''}${esc(x.payer)}</div></div><div class="expense-amount">${esc(x.currency)} ${esc(x.amount)}</div></div>`)).join('');list.querySelectorAll('.swipe-shell').forEach(shell=>{const i=+shell.dataset.i;setupSwipe(shell,shell.querySelector('.expense-row'),()=>requestDelete(`確定刪除「${db[active][i].name}」？`,()=>{db[active].splice(i,1);saveDB();renderPaid()}),()=>editExpense(i))})}
 function editExpense(i){const x=db[active][i],name=prompt('修改名稱',x.name);if(name===null)return;const amount=prompt('修改金額',x.amount);if(amount===null)return;x.name=name;x.amount=amount;saveDB();renderPaid()}
 function controlRow(obj,path){return `<div class="fixed-grid"><input data-path="${path}.amount" inputmode="decimal" value="${esc(obj.amount)}" placeholder="金額"><select data-path="${path}.currency">${opts(currencies,obj.currency)}</select><select data-path="${path}.payer">${opts(payers,obj.payer||'無')}</select></div>`}
-function renderOther(){panel.innerHTML=`<div class="fixed-list"><div class="fixed-item"><div class="fixed-title">✈️ 機票</div>${controlRow(db.other.flight,'other.flight')}</div><div class="fixed-item"><div class="fixed-title">🚕 計程車</div><div id="taxiList" class="transport-add"></div><div class="other-actions"><button type="button" id="addTaxi">＋ 新增計程車</button></div></div><div class="fixed-item"><div class="fixed-title">🚃 地鐵 / JR</div><div id="metroList" class="transport-add"></div><div class="other-actions"><button type="button" id="addMetro">＋ 新增交通</button></div></div><div class="fixed-item"><div class="fixed-title">🏨 飯店</div>${db.other.hotels.map((h,i)=>`<div class="fixed-label">${esc(h.label)}</div>${controlRow(h,`other.hotels.${i}`)}`).join('')}</div><div class="fixed-item"><div class="fixed-title">🛡️ 旅平險</div>${db.other.insurance.map((x,i)=>`<div class="fixed-label">${esc(x.label)}</div>${controlRow(x,`other.insurance.${i}`)}`).join('')}</div></div><div class="hint"> 修改後會自動同步 ☺︎ </div>`;renderTransport('taxis','taxiList','計程車');renderTransport('metros','metroList','交通');document.getElementById('addTaxi').onclick=()=>{db.other.taxis.push({date:'1/16',name:'',amount:'',currency:'JPY',payer:'無'});saveDB();renderOther()};document.getElementById('addMetro').onclick=()=>{db.other.metros.push({date:'1/16',name:'',amount:'',currency:'JPY',payer:'無'});saveDB();renderOther()};bindOtherControls()}
+function renderOther(){panel.innerHTML=`<div class="fixed-list"><div class="fixed-item"><div class="fixed-title">✈️ 機票</div>${controlRow(db.other.flight,'other.flight')}</div><div class="fixed-item"><div class="fixed-title">🚕 計程車</div><div id="taxiList" class="transport-add"></div><div class="other-actions"><button type="button" id="addTaxi">＋ 新增計程車</button></div></div><div class="fixed-item"><div class="fixed-title">🚃 地鐵 / JR</div><div id="metroList" class="transport-add"></div><div class="other-actions"><button type="button" id="addMetro">＋ 新增交通</button></div></div><div class="fixed-item"><div class="fixed-title">🏨 飯店</div>${db.other.hotels.map((h,i)=>`<div class="fixed-label">${esc(h.label)}</div>${controlRow(h,`other.hotels.${i}`)}`).join('')}</div><div class="fixed-item"><div class="fixed-title">🛡️ 旅平險</div>${db.other.insurance.map((x,i)=>`<div class="fixed-label">${esc(x.label)}</div>${controlRow(x,`other.insurance.${i}`)}`).join('')}</div></div><div class="hint">ISA 和 Do 共用 Supabase 雲端資料；修改後會自動同步。</div>`;renderTransport('taxis','taxiList','計程車');renderTransport('metros','metroList','交通');document.getElementById('addTaxi').onclick=()=>{db.other.taxis.push({date:'1/16',name:'',amount:'',currency:'JPY',payer:'無'});saveDB();renderOther()};document.getElementById('addMetro').onclick=()=>{db.other.metros.push({date:'1/16',name:'',amount:'',currency:'JPY',payer:'無'});saveDB();renderOther()};bindOtherControls()}
 function renderTransport(key,id,label){const box=document.getElementById(id),arr=db.other[key];if(!arr.length){box.innerHTML='<div class="empty">目前沒有紀錄</div>';return}box.innerHTML=arr.map((x,i)=>swipeHTML(i,`<div class="field-row"><div class="field"><label>日期</label><select data-tkey="${key}" data-i="${i}" data-f="date">${opts(dates,x.date)}</select></div><div class="field"><label>名稱</label><input data-tkey="${key}" data-i="${i}" data-f="name" value="${esc(x.name)}" placeholder="${label}名稱"></div></div><div class="fixed-grid" style="margin-top:7px"><input data-tkey="${key}" data-i="${i}" data-f="amount" inputmode="decimal" value="${esc(x.amount)}" placeholder="金額"><select data-tkey="${key}" data-i="${i}" data-f="currency">${opts(currencies,x.currency)}</select><select data-tkey="${key}" data-i="${i}" data-f="payer">${opts(payers,x.payer||'無')}</select></div>`,key)).join('');box.querySelectorAll('[data-tkey]').forEach(el=>el.onchange=el.oninput=()=>{db.other[el.dataset.tkey][+el.dataset.i][el.dataset.f]=el.value;saveDB()});box.querySelectorAll('.swipe-shell').forEach(shell=>{const i=+shell.dataset.i;setupSwipe(shell,shell.querySelector('.expense-row'),()=>requestDelete(`確定刪除這筆${label}？`,()=>{db.other[key].splice(i,1);saveDB();renderOther()}),null)})}
 function setPath(path,value){const parts=path.split('.');let o=db;for(let i=0;i<parts.length-1;i++)o=o[parts[i]];o[parts.at(-1)]=value;saveDB()}
 function bindOtherControls(){document.querySelectorAll('[data-path]').forEach(el=>el.onchange=el.oninput=()=>setPath(el.dataset.path,el.value))}
@@ -692,8 +716,171 @@ document.getElementById('deleteRoute').onclick=()=>{
   });
 };
 
-/* FX: prototype rate only; final deployment should use live API */
-let rate=.215,lock=false;const j=document.getElementById('jpy'),t=document.getElementById('twd');function num(v){return parseFloat(String(v).replace(/,/g,''))||0}function fmt(v){return v?new Intl.NumberFormat('zh-TW',{maximumFractionDigits:2}).format(v):''}j.oninput=()=>{if(lock)return;lock=true;t.value=fmt(num(j.value)*rate);lock=false};t.oninput=()=>{if(lock)return;lock=true;j.value=fmt(num(t.value)/rate);lock=false};document.getElementById('swap').onclick=()=>{const a=j.value;j.value=t.value;t.value=a};
+/* FX: latest available online JPY/TWD reference rates, two-way calculator.
+   The public free provider updates DAILY, not tick-by-tick bank execution rates.
+   All FX input values remain local; they are NOT saved to Supabase. */
+const j=document.getElementById('jpy'),t=document.getElementById('twd');
+const fxInputs=[j,t],fxLabels=[...document.querySelectorAll('.fx .fxlabel')];
+const fxStatus=document.getElementById('fxStatus');
+const FX_CACHE_KEY='isa-do-fx-jpy-twd-reference-v1';
+const fxFormatter=new Intl.NumberFormat('zh-TW',{maximumFractionDigits:2});
+let fxCurrency=['JPY','TWD'];
+let fxActive=j;
+let fxRate=null; // 1 JPY -> ? TWD
+let fxDate='';
+let fxLastFetch=0;
+let fxLoading=false;
+
+function fxFormat(value){return fxFormatter.format(Math.round((value+Number.EPSILON)*100)/100)}
+function fxCurrencyLabel(code){return code==='JPY'?'🇯🇵 JPY':'🇹🇼 TWD'}
+function fxSetStatus(message){fxStatus.textContent=message}
+function fxShowRate(prefix='參考匯率'){
+  if(fxRate===null){fxSetStatus('無法取得匯率，請連網後按「更新」。');return}
+  fxSetStatus(`${prefix} ${fxDate||'日期未知'} · ¥1 ≈ NT$${fxRate.toFixed(4)}（每日更新，非銀行成交價）`);
+}
+
+// Tiny recursive-descent arithmetic parser. Never eval user input as JavaScript.
+function fxCalculate(raw){
+  let expr=String(raw??'').trim().replace(/[\s,，]/g,'')
+    .replace(/[＋]/g,'+').replace(/[－−–]/g,'-')
+    .replace(/[×＊xX]/g,'*').replace(/[÷／]/g,'/')
+    .replace(/[¥￥$＄]/g,'');
+  if(expr.endsWith('='))expr=expr.slice(0,-1);
+  if(!expr||expr.length>100||!/^[0-9.+\-*/()]+$/.test(expr))return null;
+  let p=0;
+  function primary(){
+    if(expr[p]==='('){p++;const value=expression();if(expr[p++]!==')')throw Error('括號錯誤');return value}
+    const m=/^(?:\d+(?:\.\d*)?|\.\d+)/.exec(expr.slice(p));
+    if(!m)throw Error('數字錯誤');
+    p+=m[0].length;
+    return Number(m[0]);
+  }
+  function unary(){if(expr[p]==='+'){p++;return unary()}if(expr[p]==='-'){p++;return -unary()}return primary()}
+  function term(){let a=unary();while(expr[p]==='*'||expr[p]==='/'){
+    const op=expr[p++],b=unary();if(op==='/'&&b===0)throw Error('不可除以零');
+    a=op==='*'?a*b:a/b;
+  }return a}
+  function expression(){let a=term();while(expr[p]==='+'||expr[p]==='-'){
+    const op=expr[p++],b=term();a=op==='+'?a+b:a-b;
+  }return a}
+  try{
+    const value=expression();
+    if(p!==expr.length||!Number.isFinite(value)||Math.abs(value)>1e12)return null;
+    return value;
+  }catch(_){return null}
+}
+
+function fxConvertFrom(source){
+  const other=source===j?t:j;
+  const amount=fxCalculate(source.value);
+  if(amount===null||fxRate===null){other.value='';return}
+  const code=fxCurrency[source===j?0:1];
+  const converted=code==='JPY'?amount*fxRate:amount/fxRate;
+  other.value=Number.isFinite(converted)?fxFormat(converted):'';
+}
+function fxFinish(source=fxActive){
+  if(!source.value.trim()){fxConvertFrom(source);return}
+  const value=fxCalculate(source.value);
+  if(value===null){fxSetStatus('算式無法計算，請檢查數字、運算符號或除以零。');return}
+  source.value=fxFormat(value);
+  fxConvertFrom(source);
+  if(fxRate!==null)fxShowRate(fxOffline?'離線參考匯率':'參考匯率');
+}
+let fxOffline=false;
+fxInputs.forEach(input=>{
+  input.addEventListener('focus',()=>{fxActive=input});
+  input.addEventListener('input',()=>{
+    fxActive=input;
+    if(input.value.trim().endsWith('=')){fxFinish(input);return}
+    fxConvertFrom(input);
+  });
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key==='='){
+      e.preventDefault();fxActive=input;fxFinish(input);
+      input.blur();
+    }
+  });
+});
+
+document.querySelectorAll('[data-fx-key]').forEach(button=>{
+  button.addEventListener('click',()=>{
+    const key=button.dataset.fxKey;
+    const input=fxActive;
+    if(key==='clear'){
+      input.value='';(input===j?t:j).value='';
+      input.focus();return;
+    }
+    if(key==='='){fxFinish(input);input.blur();return}
+    const start=input.selectionStart??input.value.length;
+    const end=input.selectionEnd??start;
+    input.setRangeText(key,start,end,'end');
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    input.focus();
+  });
+});
+
+// Swap both currency LABELS and values, never just exchange two unrelated numbers.
+document.getElementById('swap').onclick=()=>{
+  const left=j.value,right=t.value;
+  j.value=right;t.value=left;
+  fxCurrency.reverse();
+  fxLabels[0].textContent=fxCurrencyLabel(fxCurrency[0]);
+  fxLabels[1].textContent=fxCurrencyLabel(fxCurrency[1]);
+  j.placeholder=fxCurrency[0]==='JPY'?'¥ 10,000':'$ 2,xxx';
+  t.placeholder=fxCurrency[1]==='JPY'?'¥ 10,000':'$ 2,xxx';
+  fxActive=fxActive===j?t:j;
+};
+
+function fxReadCache(){
+  try{
+    const cached=JSON.parse(localStorage.getItem(FX_CACHE_KEY)||'null');
+    if(cached&&Number.isFinite(cached.rate)&&cached.rate>0&&/^\d{4}-\d{2}-\d{2}$/.test(cached.date)){
+      fxRate=cached.rate;fxDate=cached.date;fxOffline=true;
+      fxShowRate('上次快取匯率');
+      fxConvertFrom(fxActive);
+    }
+  }catch(e){console.warn('FX cache unavailable',e)}
+}
+async function fxFetchOne(url){
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),7000);
+  try{
+    const response=await fetch(url,{signal:controller.signal,cache:'no-store'});
+    if(!response.ok)throw Error('HTTP '+response.status);
+    const data=await response.json();
+    const rate=Number(data?.jpy?.twd);
+    if(!Number.isFinite(rate)||rate<=0||!/^\d{4}-\d{2}-\d{2}$/.test(data.date||''))throw Error('Invalid JPY/TWD rate');
+    return {rate,date:data.date};
+  }finally{clearTimeout(timeout)}
+}
+async function fxRefresh(){
+  if(fxLoading)return;
+  fxLoading=true;fxLastFetch=Date.now();
+  document.getElementById('fxRefresh').disabled=true;
+  if(fxRate===null)fxSetStatus('正在取得最新參考匯率…');
+  else fxShowRate('正在更新（暫用上次匯率）');
+  const urls=[
+    'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/jpy.min.json',
+    'https://latest.currency-api.pages.dev/v1/currencies/jpy.min.json'
+  ];
+  let found=null;
+  for(const url of urls){try{found=await fxFetchOne(url);break}catch(e){console.warn('FX rate source failed:',e)}}
+  if(found){
+    fxRate=found.rate;fxDate=found.date;fxOffline=false;
+    try{localStorage.setItem(FX_CACHE_KEY,JSON.stringify(found))}catch(_){}
+    fxShowRate();fxConvertFrom(fxActive);
+  }else if(fxRate!==null){fxOffline=true;fxShowRate('⚠️ 離線快取匯率（非最新）')}
+  else fxSetStatus('⚠️ 匯率讀取失敗，暫停換算；計算機仍可使用。按「更新」重試。');
+  fxLoading=false;
+  document.getElementById('fxRefresh').disabled=false;
+}
+document.getElementById('fxRefresh').onclick=fxRefresh;
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden&&Date.now()-fxLastFetch>30*60*1000)fxRefresh();
+});
+setInterval(()=>{if(!document.hidden)fxRefresh()},60*60*1000);
+fxReadCache();
+fxRefresh();
 
 initAuth();
 </script>
