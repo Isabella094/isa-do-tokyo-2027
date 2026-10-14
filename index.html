@@ -736,7 +736,7 @@ function fxCurrencyLabel(code){return code==='JPY'?'🇯🇵 JPY':'🇹🇼 TWD'
 function fxSetStatus(message){fxStatus.textContent=message}
 function fxShowRate(prefix='參考匯率'){
   if(fxRate===null){fxSetStatus('無法取得匯率，請連網後按「更新」。');return}
-  fxSetStatus(`${prefix} ${fxDate||'日期未知'} · ¥1 ≈ NT$${fxRate.toFixed(4)}（每日更新，非銀行成交價）`);
+  fxSetStatus(`${prefix} ${fxDate||'日期未知'} · ¥1 ≈ NT$${fxRate.toFixed(4)}`);
 }
 
 // Tiny recursive-descent arithmetic parser. Never eval user input as JavaScript.
