@@ -323,6 +323,7 @@ html,body{background:#E9E1D9}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+
 const dates=['1/16','1/17','1/18','1/19','1/20','1/21'];
 const currencies=['JPY','TWD','USD'];
 const payers=['無','Do','Isa','Do先付','Isa先付','完'];
@@ -783,7 +784,7 @@ function fxFormat(value){return fxFormatter.format(Math.round((value+Number.EPSI
 function fxCurrencyLabel(code){return code==='JPY'?'🇯🇵 JPY':'🇹🇼 TWD'}
 function fxSetStatus(message){fxStatus.textContent=message}
 function fxShowRate(prefix='參考匯率'){
-  if(fxRate===null){fxSetStatus('無法取得匯率，請連網後按「更新」。');return}
+  if(fxRate===null){fxSetStatus('無法取得匯率');return}
   fxSetStatus(`${prefix} ${fxDate||'日期未知'} · ¥1 ≈ NT$${fxRate.toFixed(4)}`);
 }
 
@@ -906,7 +907,7 @@ async function fxRefresh(){
   fxLoading=true;fxLastFetch=Date.now();
   document.getElementById('fxRefresh').disabled=true;
   if(fxRate===null)fxSetStatus('正在取得最新參考匯率…');
-  else fxShowRate('正在更新（暫用上次匯率）');
+  else fxShowRate('正在更新');
   const urls=[
     'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/jpy.min.json',
     'https://latest.currency-api.pages.dev/v1/currencies/jpy.min.json'
@@ -918,7 +919,7 @@ async function fxRefresh(){
     try{localStorage.setItem(FX_CACHE_KEY,JSON.stringify(found))}catch(_){}
     fxShowRate();fxConvertFrom(fxActive);
   }else if(fxRate!==null){fxOffline=true;fxShowRate('⚠️ 離線快取匯率')}
-  else fxSetStatus('⚠️ 匯率讀取失敗');
+  else fxSetStatus('⚠️ 匯率讀取失敗。');
   fxLoading=false;
   document.getElementById('fxRefresh').disabled=false;
 }
