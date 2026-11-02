@@ -380,9 +380,9 @@ const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
 
 function normalizeDB(saved){
   const base=clone(defaults);
-  if(!saved||typeof saved!=='object')return base;
+  if(!saved||typeof saved!=='object')return withRecordIds(base);
   const oldOther=saved.other&&typeof saved.other==='object'?saved.other:{};
-  return {
+  return withRecordIds({
     ...base,...saved,
     food:Array.isArray(saved.food)?saved.food:base.food,
     shopping:Array.isArray(saved.shopping)?saved.shopping:base.shopping,
@@ -404,19 +404,17 @@ function normalizeDB(saved){
     },
     important:Array.isArray(saved.important)?saved.important:base.important,
     schedule:mergeSchedule(saved.schedule||{})
-  };
+  });
 }
 
 function readLocalDraft(){
   try{return normalizeDB(JSON.parse(localStorage.getItem(KEY)||'null'))}catch(e){return clone(defaults)}
 }
 
-let db=clone(defaults);
+let db=normalizeDB(null);
 let cloudReady=false;
 let realtimeChannel=null;
 let saveTimer=null;
-let saveChain=Promise.resolve();
-let lastCloudJSON='';
 let toastTimer=null;
 
 function showToast(message){
@@ -429,7 +427,11 @@ function showToast(message){
 }
 
 function cacheLocal(){
-  try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){console.warn('Local cache unavailable.',e)}
+  try{
+    localStorage.setItem(KEY,JSON.stringify(db));
+    if(cloudBase&&hasLocalChanges())localStorage.setItem(PENDING_KEY,JSON.stringify({base:cloudBase,state:db}));
+    else localStorage.removeItem(PENDING_KEY);
+  }catch(e){console.warn('Local cache unavailable.',e)}
 }
 
 function renderCurrentView(){
@@ -439,71 +441,213 @@ function renderCurrentView(){
   if(currentDay&&document.getElementById('dayView').classList.contains('active'))renderDay();
 }
 
-function pushCloud(snapshot){
-  saveChain=saveChain.then(async()=>{
-    const json=JSON.stringify(snapshot);
-    if(json===lastCloudJSON)return;
-    const {data,error}=await sb.from('trip_state')
-      .update({state:snapshot,updated_at:new Date().toISOString()})
-      .eq('id',TRIP_ID)
-      .select('state,updated_at')
-      .single();
-    if(error){
+// Stable row identifiers let concurrent additions/edits be merged independently.
+function withRecordIds(value,fresh=false,path='trip'){
+  if(Array.isArray(value)){
+    value.forEach((item,i)=>{
+      if(item&&typeof item==='object'&&!Array.isArray(item)){
+        if(!item._id)item._id=fresh
+          ? `row:${globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)}`
+          : `legacy:${path}:${i}`;
+        withRecordIds(item,fresh,`${path}.${item._id}`);
+      }
+    });
+  }else if(value&&typeof value==='object'){
+    Object.keys(value).forEach(key=>withRecordIds(value[key],fresh,`${path}.${key}`));
+  }
+  return value;
+}
+function sameState(a,b){
+  if(a===b)return true;
+  if(!a||!b||typeof a!=='object'||typeof b!=='object')return false;
+  if(Array.isArray(a)!==Array.isArray(b))return false;
+  const ak=Object.keys(a),bk=Object.keys(b);
+  return ak.length===bk.length&&ak.every(k=>Object.hasOwn(b,k)&&sameState(a[k],b[k]));
+}
+function copyState(value){return value===undefined?undefined:clone(value)}
+// Unchanged local fields take the remote value. Conflicting edits to one field
+// take this save's local value; deletion wins over editing a deleted record.
+function mergeChanges(base,local,remote){
+  if(sameState(local,base))return copyState(remote);
+  if(sameState(remote,base)||sameState(local,remote))return copyState(local);
+  if(base!==undefined&&(local===undefined||remote===undefined))return undefined;
+  if(Array.isArray(local)&&Array.isArray(remote)){
+    const prior=Array.isArray(base)?base:[];
+    const keyed=arr=>arr.every(x=>x&&typeof x==='object'&&x._id);
+    if(!keyed(prior)||!keyed(local)||!keyed(remote))return clone(local);
+    const bm=new Map(prior.map(x=>[x._id,x]));
+    const lm=new Map(local.map(x=>[x._id,x]));
+    const rm=new Map(remote.map(x=>[x._id,x]));
+    const localReordered=!sameState(
+      local.filter(x=>bm.has(x._id)).map(x=>x._id),
+      prior.filter(x=>lm.has(x._id)).map(x=>x._id)
+    );
+    const ordered=localReordered?[...local,...remote]:[...remote,...local];
+    return [...new Set(ordered.map(x=>x._id))].map(id=>
+      mergeChanges(bm.get(id),lm.get(id),rm.get(id))
+    ).filter(x=>x!==undefined);
+  }
+  if(local&&remote&&typeof local==='object'&&typeof remote==='object'
+      &&!Array.isArray(local)&&!Array.isArray(remote)){
+    const prior=base&&typeof base==='object'?base:{};
+    const out={};
+    for(const key of new Set([...Object.keys(prior),...Object.keys(local),...Object.keys(remote)])){
+      const value=mergeChanges(prior[key],local[key],remote[key]);
+      if(value!==undefined)out[key]=value;
+    }
+    return out;
+  }
+  return copyState(local);
+}
+let cloudBase=null;
+let syncBusy=false;
+let refreshBusy=false;
+let refreshPending=false;
+let refreshTimer=null;
+let retryTimer=null;
+const PENDING_KEY=KEY+'-pending-v1';
+function hasLocalChanges(){return !!cloudBase&&!sameState(db,cloudBase)}
+function isEditingTrip(){
+  const focused=document.activeElement;
+  if(focused?.matches('input,select,textarea,[contenteditable="true"]'))return true;
+  if(document.querySelector('.sheet-backdrop.open,.delete-confirm.open'))return true;
+  // A half-filled expense form is not in db yet: keep it even after blur.
+  const typed=[...document.querySelectorAll('#entryForm input')].some(el=>el.value.trim());
+  const selected=[...document.querySelectorAll('#entryForm select')].some(el=>
+    [...el.options].some(option=>option.selected!==option.defaultSelected)
+  );
+  return typed||selected;
+}
+function queueRemoteRefresh(){
+  refreshPending=true;
+  clearTimeout(refreshTimer);
+  refreshTimer=setTimeout(refreshWhenIdle,500);
+}
+async function readCloudRow(){
+  const {data,error}=await sb.from('trip_state').select('state,updated_at').eq('id',TRIP_ID).single();
+  if(error)throw error;
+  if(!data)throw Error('Missing shared trip');
+  return data;
+}
+function nextCloudTime(previous){
+  return new Date(Math.max(Date.now(),(Date.parse(previous)||0)+1)).toISOString();
+}
+async function compareAndSave(row,state){
+  let request=sb.from('trip_state').update({state,updated_at:nextCloudTime(row.updated_at)}).eq('id',TRIP_ID);
+  request=row.updated_at==null?request.is('updated_at',null):request.eq('updated_at',row.updated_at);
+  const {data,error}=await request.select('state,updated_at').maybeSingle();
+  if(error)throw error;
+  return data; // No row means another writer won; read again and merge.
+}
+function pushCloud(){
+  if(syncBusy||!cloudReady||!hasLocalChanges())return;
+  syncBusy=true;
+  return (async()=>{
+    try{
+      // Capture one edit batch. Further typing remains in db for the next save.
+      const local=clone(db),base=clone(cloudBase);
+      let saved=false;
+      for(let attempt=0;attempt<6;attempt++){
+        const row=await readCloudRow();
+        const remote=normalizeDB(row.state);
+        const merged=mergeChanges(base,local,remote);
+        if(sameState(merged,remote)||await compareAndSave(row,merged)){
+          // Keep the displayed baseline, rather than inserting remote rows into
+          // arrays whose input handlers still use the displayed row indices.
+          cloudBase=local;
+          cacheLocal();
+          saved=true;
+          break;
+        }
+      }
+      if(!saved)throw Error('Concurrent updates; retry required');
+      clearTimeout(retryTimer);retryTimer=null;
+      queueRemoteRefresh();
+    }catch(error){
       console.error('Supabase save failed:',error);
       showToast('⚠️ 尚未同步，請確認網路');
-      return;
+      clearTimeout(retryTimer);
+      retryTimer=setTimeout(()=>{retryTimer=null;pushCloud()},5000);
+    }finally{
+      syncBusy=false;
+      if(hasLocalChanges()&&!retryTimer){
+        clearTimeout(saveTimer);
+        saveTimer=setTimeout(pushCloud,650);
+      }
     }
-    lastCloudJSON=JSON.stringify(data.state||snapshot);
-  }).catch(err=>{console.error(err);showToast('⚠️ 尚未同步，請確認網路')});
+  })();
 }
-
 function saveDB(){
+  withRecordIds(db,true);
   cacheLocal();
   if(!cloudReady)return false;
   clearTimeout(saveTimer);
-  const snapshot=clone(db);
-  saveTimer=setTimeout(()=>pushCloud(snapshot),180);
+  saveTimer=setTimeout(pushCloud,650);
   return true;
 }
-
 async function loadTripState(){
-  const {data,error}=await sb.from('trip_state').select('state,updated_at').eq('id',TRIP_ID).single();
-  if(error)throw error;
-  if(data&&data.state){
-    db=normalizeDB(data.state);
-    lastCloudJSON=JSON.stringify(data.state);
-    cacheLocal();
-  }else{
-    db=readLocalDraft();
-    const {data:seeded,error:seedError}=await sb.from('trip_state')
-      .update({state:db,updated_at:new Date().toISOString()})
-      .eq('id',TRIP_ID)
-      .select('state,updated_at')
-      .single();
-    if(seedError)throw seedError;
-    lastCloudJSON=JSON.stringify(seeded.state||db);
-    cacheLocal();
+  let row=await readCloudRow();
+  if(!row.state){
+    const draft=normalizeDB(readLocalDraft());
+    const seeded=await compareAndSave(row,draft);
+    row=seeded||await readCloudRow();
   }
+  db=normalizeDB(row.state);
+  cloudBase=clone(db);
+  // Recover this device's unsent edits after a failed connection/reload.
+  try{
+    const pending=JSON.parse(localStorage.getItem(PENDING_KEY)||'null');
+    if(pending?.base&&pending?.state)
+      db=mergeChanges(normalizeDB(pending.base),normalizeDB(pending.state),db);
+  }catch(error){console.warn('Pending draft unavailable',error)}
+  cacheLocal();
+  if(hasLocalChanges())saveTimer=setTimeout(pushCloud,650);
 }
-
+async function refreshWhenIdle(){
+  if(!refreshPending||!cloudReady||syncBusy||refreshBusy||hasLocalChanges()||isEditingTrip())return;
+  refreshBusy=true;
+  refreshPending=false;
+  try{
+    const row=await readCloudRow();
+    if(syncBusy||hasLocalChanges()||isEditingTrip()){
+      refreshPending=true;
+      return;
+    }
+    const next=normalizeDB(row.state);
+    cloudBase=clone(next);
+    if(sameState(next,db))return; // Own echo: no toast, no form redraw.
+    db=next;
+    cacheLocal();
+    renderCurrentView();
+    showToast('☁️ 已同步另一台裝置的更新');
+  }catch(error){refreshPending=true;console.warn('Refresh deferred:',error)}
+  finally{refreshBusy=false}
+}
 function startRealtime(){
   if(realtimeChannel)sb.removeChannel(realtimeChannel);
   realtimeChannel=sb.channel('isa-do-tokyo-2027-shared')
-    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'trip_state',filter:`id=eq.${TRIP_ID}`},payload=>{
-      const next=payload.new&&payload.new.state;
-      if(!next)return;
-      const nextJSON=JSON.stringify(next);
-      if(nextJSON===JSON.stringify(db)){lastCloudJSON=nextJSON;return}
-      db=normalizeDB(next);
-      lastCloudJSON=nextJSON;
-      cacheLocal();
-      renderCurrentView();
-      showToast('☁️ 已同步另一台裝置的更新');
-    })
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'trip_state',filter:`id=eq.${TRIP_ID}`},queueRemoteRefresh)
     .subscribe(status=>{
+      if(status==='SUBSCRIBED')queueRemoteRefresh();
       if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')console.warn('Realtime status:',status);
     });
 }
+// Check again after normal UI actions; never replace an in-progress form.
+['focusout','click','submit','change'].forEach(type=>document.addEventListener(type,()=>{
+  if(refreshPending){clearTimeout(refreshTimer);refreshTimer=setTimeout(refreshWhenIdle,500)}
+}));
+window.addEventListener('online',()=>{
+  clearTimeout(retryTimer);retryTimer=null;
+  if(hasLocalChanges())pushCloud();
+  queueRemoteRefresh();
+});
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden){
+    clearTimeout(retryTimer);retryTimer=null;
+    if(hasLocalChanges())pushCloud();
+    queueRemoteRefresh();
+  }
+});
 
 function showLogin(message=''){
   document.getElementById('appRoot').hidden=true;
@@ -574,7 +718,8 @@ document.getElementById('loginForm').addEventListener('submit',async e=>{
     msg.textContent=authErrorMessage(error);
   }finally{btn.disabled=false}
 });
-function opts(arr,selected){return arr.map(x=>`<option ${x===selected?'selected':''}>${x}</option>`).join('')}
+function payerLabel(value){return value==='無'?'未付款':value==='完'?'已付清':value}
+function opts(arr,selected){return arr.map(x=>`<option value="${esc(x)}" ${x===selected?'selected':''}>${esc(arr===payers?payerLabel(x):x)}</option>`).join('')}
 
 /* Router */
 let currentDay=null, editMode=false;
@@ -660,7 +805,7 @@ document.getElementById('deleteOK').addEventListener('click',()=>{
 });
 deleteConfirm.addEventListener('click',e=>{if(e.target===deleteConfirm)closeDeleteConfirm()});
 
-function renderExpenseList(){const list=document.getElementById('expenseList'),rows=db[active]||[];if(!rows.length){list.innerHTML='<div class="empty">目前還沒有紀錄 ♡</div>';return}list.innerHTML=rows.map((x,i)=>swipeHTML(i,`<div class="expense-top"><div><div class="expense-name">${esc(x.name)}</div><div class="expense-meta">${x.date?esc(x.date)+' · ':''}${esc(x.payer)}</div></div><div class="expense-amount">${esc(x.currency)} ${esc(x.amount)}</div></div>`)).join('');list.querySelectorAll('.swipe-shell').forEach(shell=>{const i=+shell.dataset.i;setupSwipe(shell,shell.querySelector('.expense-row'),()=>requestDelete(`確定刪除「${db[active][i].name}」？`,()=>{db[active].splice(i,1);saveDB();renderPaid()}),()=>editExpense(i))})}
+function renderExpenseList(){const list=document.getElementById('expenseList'),rows=db[active]||[];if(!rows.length){list.innerHTML='<div class="empty">目前還沒有紀錄 ♡</div>';return}list.innerHTML=rows.map((x,i)=>swipeHTML(i,`<div class="expense-top"><div><div class="expense-name">${esc(x.name)}</div><div class="expense-meta">${x.date?esc(x.date)+' · ':''}${esc(payerLabel(x.payer))}</div></div><div class="expense-amount">${esc(x.currency)} ${esc(x.amount)}</div></div>`)).join('');list.querySelectorAll('.swipe-shell').forEach(shell=>{const i=+shell.dataset.i;setupSwipe(shell,shell.querySelector('.expense-row'),()=>requestDelete(`確定刪除「${db[active][i].name}」？`,()=>{db[active].splice(i,1);saveDB();renderPaid()}),()=>editExpense(i))})}
 function editExpense(i){const x=db[active][i],name=prompt('修改名稱',x.name);if(name===null)return;const amount=prompt('修改金額',x.amount);if(amount===null)return;x.name=name;x.amount=amount;saveDB();renderPaid()}
 function controlRow(obj,path){return `<div class="fixed-grid"><input data-path="${path}.amount" inputmode="decimal" value="${esc(obj.amount)}" placeholder="金額"><select data-path="${path}.currency">${opts(currencies,obj.currency)}</select><select data-path="${path}.payer">${opts(payers,obj.payer||'無')}</select></div>`}
 // Keep each section's open state through tab switches and live data refreshes.
