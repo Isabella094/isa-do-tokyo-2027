@@ -174,6 +174,14 @@ html,body{background:#E9E1D9}
 .paid-title-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .paid-title-row .section-title{margin-bottom:0}
 .paid-collapse-hint{font-size:9px;color:#93898A;font-weight:400;white-space:nowrap;line-height:1.4}
+
+/* Independently collapsible fixed expenses. */
+.fixed-item > summary.fixed-title{display:flex;align-items:center;justify-content:space-between;gap:10px;list-style:none;cursor:pointer;margin:0;min-height:28px}
+.fixed-item > summary.fixed-title::-webkit-details-marker{display:none}
+.fixed-item > summary.fixed-title::after{content:'＋';font-size:16px;color:var(--muted)}
+.fixed-item[open] > summary.fixed-title::after{content:'−'}
+.fixed-item > summary.fixed-title:focus-visible{outline:2px solid var(--burgundy);outline-offset:3px;border-radius:5px}
+.fixed-body{padding-top:7px}
 </style>
 </head>
 <body>
@@ -348,7 +356,7 @@ const defaultSchedule={
 };
 const defaults={
   food:[],shopping:[],ticket:[],
-  other:{flight:{amount:'42328',currency:'TWD',payer:'完'},taxis:[],metros:[],hotels:[{label:'1/16–1/17 🏮',amount:'135.22',currency:'USD',payer:'無'},{label:'1/17–1/21 🗼',amount:'67462',currency:'JPY',payer:'無'}],insurance:[{label:'Do',amount:'',currency:'TWD',payer:'無'},{label:'Isa',amount:'',currency:'TWD',payer:'無'}]},
+  other:{flight:{amount:'42328',currency:'TWD',payer:'完'},internet:{amount:'',currency:'TWD',payer:'無'},taxis:[],metros:[],hotels:[{label:'1/16–1/17 🏮',amount:'135.22',currency:'USD',payer:'無'},{label:'1/17–1/21 🗼',amount:'67462',currency:'JPY',payer:'無'}],insurance:[{label:'Do',amount:'',currency:'TWD',payer:'無'},{label:'Isa',amount:'',currency:'TWD',payer:'無'}]},
   important:[
     {text:'出發前三天填 Visit Japan Web',done:false},{text:'出發前 24 小時線上報到',done:false},{text:'設定西瓜卡',done:false},{text:'換足夠日圓',done:false},{text:'買旅平險',done:false},{text:'買網路 / eSIM',done:false},{text:'回程前 24 小時線上報到',done:false}
   ],
@@ -378,6 +386,7 @@ function normalizeDB(saved){
     other:{
       ...base.other,...oldOther,
       flight:{...base.other.flight,...(oldOther.flight||{})},
+      internet:{...base.other.internet,...(oldOther.internet||{})},
       taxis:Array.isArray(oldOther.taxis)?oldOther.taxis:base.other.taxis,
       metros:Array.isArray(oldOther.metros)?oldOther.metros:base.other.metros,
       hotels:Array.isArray(oldOther.hotels)?oldOther.hotels:base.other.hotels,
@@ -512,31 +521,48 @@ async function enterTrip(){
   }
 }
 
+function authErrorMessage(error){
+  const code=error?.code||'';
+  const message=error?.message||'';
+  if(code==='invalid_credentials'||/invalid login credentials/i.test(message))
+    return '旅行帳號或密碼不符。請使用原本的旅行密碼；若仍失敗，請在 Supabase 確認共用帳號並重設密碼。';
+  if(code==='email_not_confirmed'||/email not confirmed/i.test(message))
+    return '共用旅行帳號尚未確認 Email，請在 Supabase 確認帳號狀態。';
+  if(error?.status===429||/rate_limit|too_many/.test(code))
+    return '登入嘗試過於頻繁，請稍後再試。';
+  if(error?.name==='AuthRetryableFetchError'||error instanceof TypeError||/fetch|network|timeout/i.test(message))
+    return '無法連上登入服務，請確認網路連線後再試。';
+  if(error?.status>=500)
+    return '登入服務暫時無法使用，請稍後再試。';
+  const detail=[code,error?.status?`HTTP ${error.status}`:''].filter(Boolean).join(' / ');
+  return `登入失敗${detail?`（${detail}）`:''}：${message||'未知錯誤，請重新整理後再試。'}`;
+}
 async function initAuth(){
-  const {data:{session}}=await sb.auth.getSession();
-  if(session){await enterTrip();return}
-  showLogin();
+  try{
+    const {data,error}=await sb.auth.getSession();
+    if(error)throw error;
+    if(data?.session){await enterTrip();return}
+    showLogin();
+  }catch(error){showLogin(authErrorMessage(error))}
 }
 
 document.getElementById('loginForm').addEventListener('submit',async e=>{
   e.preventDefault();
-  const password=document.getElementById('tripPassword').value;
+  const input=document.getElementById('tripPassword');
   const btn=document.getElementById('loginBtn');
   const msg=document.getElementById('loginMessage');
+  if(btn.disabled)return;
+  if(!input.value){msg.textContent='請輸入旅行密碼。';input.focus();return}
   btn.disabled=true;msg.textContent='登入中…';
-  const {error}=await sb.auth.signInWithPassword({email:TRIP_EMAIL,password});
-  document.getElementById('tripPassword').value='';
-  if(error){
-    console.error('Login failed:',error);
-    msg.textContent=/email not confirmed/i.test(error.message||'')
-      ?'共用旅行帳號尚未確認 Email，請回 Supabase Users 將帳號設為已確認。'
-      :'旅行密碼不正確，請再試一次。';
-    btn.disabled=false;
-    return;
-  }
-  msg.textContent='';
-  btn.disabled=false;
-  await enterTrip();
+  try{
+    const {error}=await sb.auth.signInWithPassword({email:TRIP_EMAIL,password:input.value});
+    if(error)throw error;
+    input.value='';
+    msg.textContent='';
+    await enterTrip();
+  }catch(error){
+    msg.textContent=authErrorMessage(error);
+  }finally{btn.disabled=false}
 });
 function opts(arr,selected){return arr.map(x=>`<option ${x===selected?'selected':''}>${x}</option>`).join('')}
 
@@ -627,7 +653,29 @@ deleteConfirm.addEventListener('click',e=>{if(e.target===deleteConfirm)closeDele
 function renderExpenseList(){const list=document.getElementById('expenseList'),rows=db[active]||[];if(!rows.length){list.innerHTML='<div class="empty">目前還沒有紀錄 ♡</div>';return}list.innerHTML=rows.map((x,i)=>swipeHTML(i,`<div class="expense-top"><div><div class="expense-name">${esc(x.name)}</div><div class="expense-meta">${x.date?esc(x.date)+' · ':''}${esc(x.payer)}</div></div><div class="expense-amount">${esc(x.currency)} ${esc(x.amount)}</div></div>`)).join('');list.querySelectorAll('.swipe-shell').forEach(shell=>{const i=+shell.dataset.i;setupSwipe(shell,shell.querySelector('.expense-row'),()=>requestDelete(`確定刪除「${db[active][i].name}」？`,()=>{db[active].splice(i,1);saveDB();renderPaid()}),()=>editExpense(i))})}
 function editExpense(i){const x=db[active][i],name=prompt('修改名稱',x.name);if(name===null)return;const amount=prompt('修改金額',x.amount);if(amount===null)return;x.name=name;x.amount=amount;saveDB();renderPaid()}
 function controlRow(obj,path){return `<div class="fixed-grid"><input data-path="${path}.amount" inputmode="decimal" value="${esc(obj.amount)}" placeholder="金額"><select data-path="${path}.currency">${opts(currencies,obj.currency)}</select><select data-path="${path}.payer">${opts(payers,obj.payer||'無')}</select></div>`}
-function renderOther(){panel.innerHTML=`<div class="fixed-list"><div class="fixed-item"><div class="fixed-title">✈️ 機票</div>${controlRow(db.other.flight,'other.flight')}</div><div class="fixed-item"><div class="fixed-title">🚕 計程車</div><div id="taxiList" class="transport-add"></div><div class="other-actions"><button type="button" id="addTaxi">＋ 新增計程車</button></div></div><div class="fixed-item"><div class="fixed-title">🚃 地鐵 / JR</div><div id="metroList" class="transport-add"></div><div class="other-actions"><button type="button" id="addMetro">＋ 新增交通</button></div></div><div class="fixed-item"><div class="fixed-title">🏨 飯店</div>${db.other.hotels.map((h,i)=>`<div class="fixed-label">${esc(h.label)}</div>${controlRow(h,`other.hotels.${i}`)}`).join('')}</div><div class="fixed-item"><div class="fixed-title">🛡️ 旅平險</div>${db.other.insurance.map((x,i)=>`<div class="fixed-label">${esc(x.label)}</div>${controlRow(x,`other.insurance.${i}`)}`).join('')}</div></div><div class="hint"> ✤ 修改後會自動同步 ✤ </div>`;renderTransport('taxis','taxiList','計程車');renderTransport('metros','metroList','交通');document.getElementById('addTaxi').onclick=()=>{db.other.taxis.push({date:'1/16',name:'',amount:'',currency:'JPY',payer:'無'});saveDB();renderOther()};document.getElementById('addMetro').onclick=()=>{db.other.metros.push({date:'1/16',name:'',amount:'',currency:'JPY',payer:'無'});saveDB();renderOther()};bindOtherControls()}
+// Keep each section's open state through tab switches and live data refreshes.
+const otherSectionOpen={flight:true,internet:true,metros:true,hotels:true,insurance:true};
+function otherSection(key,title,body){
+  return `<details class="fixed-item" data-other-section="${key}" ${otherSectionOpen[key]?'open':''}><summary class="fixed-title">${title}</summary><div class="fixed-body">${body}</div></details>`;
+}
+function renderOther(){
+  panel.innerHTML=`<div class="fixed-list">${[
+    otherSection('flight','✈️ 機票',controlRow(db.other.flight,'other.flight')),
+    otherSection('internet','📶 網路',controlRow(db.other.internet,'other.internet')),
+    otherSection('metros','🚃 地鐵 / JR','<div id="metroList" class="transport-add"></div><div class="other-actions"><button type="button" id="addMetro">＋ 新增交通</button></div>'),
+    otherSection('hotels','🏨 飯店',db.other.hotels.map((h,i)=>`<div class="fixed-label">${esc(h.label)}</div>${controlRow(h,`other.hotels.${i}`)}`).join('')),
+    otherSection('insurance','🛡️ 旅平險',db.other.insurance.map((x,i)=>`<div class="fixed-label">${esc(x.label)}</div>${controlRow(x,`other.insurance.${i}`)}`).join(''))
+  ].join('')}</div><div class="hint"> ✤ 修改後會自動同步 ✤ </div>`;
+  panel.querySelectorAll('[data-other-section]').forEach(section=>{
+    section.addEventListener('toggle',()=>{otherSectionOpen[section.dataset.otherSection]=section.open});
+  });
+  renderTransport('metros','metroList','交通');
+  document.getElementById('addMetro').onclick=()=>{
+    db.other.metros.push({date:'1/16',name:'',amount:'',currency:'JPY',payer:'無'});
+    saveDB();renderOther();
+  };
+  bindOtherControls();
+}
 function renderTransport(key,id,label){const box=document.getElementById(id),arr=db.other[key];if(!arr.length){box.innerHTML='<div class="empty">目前沒有紀錄</div>';return}box.innerHTML=arr.map((x,i)=>swipeHTML(i,`<div class="field-row"><div class="field"><label>日期</label><select data-tkey="${key}" data-i="${i}" data-f="date">${opts(dates,x.date)}</select></div><div class="field"><label>名稱</label><input data-tkey="${key}" data-i="${i}" data-f="name" value="${esc(x.name)}" placeholder="${label}名稱"></div></div><div class="fixed-grid" style="margin-top:7px"><input data-tkey="${key}" data-i="${i}" data-f="amount" inputmode="decimal" value="${esc(x.amount)}" placeholder="金額"><select data-tkey="${key}" data-i="${i}" data-f="currency">${opts(currencies,x.currency)}</select><select data-tkey="${key}" data-i="${i}" data-f="payer">${opts(payers,x.payer||'無')}</select></div>`,key)).join('');box.querySelectorAll('[data-tkey]').forEach(el=>el.onchange=el.oninput=()=>{db.other[el.dataset.tkey][+el.dataset.i][el.dataset.f]=el.value;saveDB()});box.querySelectorAll('.swipe-shell').forEach(shell=>{const i=+shell.dataset.i;setupSwipe(shell,shell.querySelector('.expense-row'),()=>requestDelete(`確定刪除這筆${label}？`,()=>{db.other[key].splice(i,1);saveDB();renderOther()}),null)})}
 function setPath(path,value){const parts=path.split('.');let o=db;for(let i=0;i<parts.length-1;i++)o=o[parts[i]];o[parts.at(-1)]=value;saveDB()}
 function bindOtherControls(){document.querySelectorAll('[data-path]').forEach(el=>el.onchange=el.oninput=()=>setPath(el.dataset.path,el.value))}
@@ -869,8 +917,8 @@ async function fxRefresh(){
     fxRate=found.rate;fxDate=found.date;fxOffline=false;
     try{localStorage.setItem(FX_CACHE_KEY,JSON.stringify(found))}catch(_){}
     fxShowRate();fxConvertFrom(fxActive);
-  }else if(fxRate!==null){fxOffline=true;fxShowRate('⚠️ 離線快取匯率（非最新）')}
-  else fxSetStatus('⚠️ 匯率讀取失敗，暫停換算；計算機仍可使用。按「更新」重試。');
+  }else if(fxRate!==null){fxOffline=true;fxShowRate('⚠️ 離線快取匯率')}
+  else fxSetStatus('⚠️ 匯率讀取失敗');
   fxLoading=false;
   document.getElementById('fxRefresh').disabled=false;
 }
