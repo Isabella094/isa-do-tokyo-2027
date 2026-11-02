@@ -357,7 +357,10 @@ const defaultSchedule={
 };
 const defaults={
   food:[],shopping:[],ticket:[],
-  other:{flight:{amount:'42328',currency:'TWD',payer:'完'},internet:{amount:'',currency:'TWD',payer:'無'},taxis:[],metros:[],hotels:[{label:'1/16–1/17 🏮',amount:'135.22',currency:'USD',payer:'無'},{label:'1/17–1/21 🗼',amount:'67462',currency:'JPY',payer:'無'}],insurance:[{label:'Do',amount:'',currency:'TWD',payer:'無'},{label:'Isa',amount:'',currency:'TWD',payer:'無'}]},
+  other:{flight:{amount:'42328',currency:'TWD',payer:'完'},internet:[
+  {label:'Do',amount:'',currency:'TWD',payer:'無'},
+  {label:'Isa',amount:'',currency:'TWD',payer:'無'}
+],taxis:[],metros:[],hotels:[{label:'1/16–1/17 🏮',amount:'135.22',currency:'USD',payer:'無'},{label:'1/17–1/21 🗼',amount:'67462',currency:'JPY',payer:'無'}],insurance:[{label:'Do',amount:'',currency:'TWD',payer:'無'},{label:'Isa',amount:'',currency:'TWD',payer:'無'}]},
   important:[
     {text:'出發前三天填 Visit Japan Web',done:false},{text:'出發前 24 小時線上報到',done:false},{text:'設定西瓜卡',done:false},{text:'換足夠日圓',done:false},{text:'買旅平險',done:false},{text:'買網路 / eSIM',done:false},{text:'回程前 24 小時線上報到',done:false}
   ],
@@ -387,7 +390,13 @@ function normalizeDB(saved){
     other:{
       ...base.other,...oldOther,
       flight:{...base.other.flight,...(oldOther.flight||{})},
-      internet:{...base.other.internet,...(oldOther.internet||{})},
+      internet:base.other.internet.map((person,i)=>({
+        ...person,
+        ...(Array.isArray(oldOther.internet)
+            ? oldOther.internet[i] || {}
+            : i===0 ? oldOther.internet || {} : {}),
+        label:person.label
+      })),
       taxis:Array.isArray(oldOther.taxis)?oldOther.taxis:base.other.taxis,
       metros:Array.isArray(oldOther.metros)?oldOther.metros:base.other.metros,
       hotels:Array.isArray(oldOther.hotels)?oldOther.hotels:base.other.hotels,
@@ -662,7 +671,14 @@ function otherSection(key,title,body){
 function renderOther(){
   panel.innerHTML=`<div class="fixed-list">${[
     otherSection('flight','✈️ 機票',controlRow(db.other.flight,'other.flight')),
-    otherSection('internet','📶 網路',controlRow(db.other.internet,'other.internet')),
+    otherSection(
+      'internet',
+      '📶 網路',
+      db.other.internet.map((x,i)=>`
+      <div class="fixed-label">${esc(x.label)}</div>
+      ${controlRow(x,`other.internet.${i}`)}
+      `).join('')
+),
     otherSection('metros','🚃 地鐵 / JR','<div id="metroList" class="transport-add"></div><div class="other-actions"><button type="button" id="addMetro">＋ 新增交通</button></div>'),
     otherSection('hotels','🏨 飯店',db.other.hotels.map((h,i)=>`<div class="fixed-label">${esc(h.label)}</div>${controlRow(h,`other.hotels.${i}`)}`).join('')),
     otherSection('insurance','🛡️ 旅平險',db.other.insurance.map((x,i)=>`<div class="fixed-label">${esc(x.label)}</div>${controlRow(x,`other.insurance.${i}`)}`).join(''))
